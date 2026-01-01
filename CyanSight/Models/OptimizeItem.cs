@@ -9,6 +9,7 @@ namespace CyanSight.Models
     {
         Normal,     // 正常优化
         Legacy,     // 过时/怀旧
+        Script      // CMD/PowerShell - 独立脚本
     }
     // 对应 <StatusChecks> 里的 <Check> 标签
     public class RegCheckRule

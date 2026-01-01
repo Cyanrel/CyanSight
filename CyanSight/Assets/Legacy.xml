@@ -1,4 +1,5 @@
-<CConfigurations>
+<?xml version="1.0" encoding="utf-8"?>
+<CyanSight>
 	<Configuration category="Memory">
 		<Item name="Demo">
 			<Tags>1,2,3,demo,cyanrel</Tags>
@@ -503,5 +504,5 @@ MFT 是 NTFS 记录所有文件信息的数据库。如果 MFT 空间不足，�
 				</Item>
 
 		</Configuration>
-</CConfigurations>
+</CyanSight>
 

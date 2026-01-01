@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CyanSight>
+	<Configurations>
+		<Configuration category="System">
+
+			<Item name="管理休眠功能 (Hibernate)">
+				<Tags>powercfg,快速启动,休眠,Hiberboot</Tags>
+
+				<Description>
+					<![CDATA[
+# ⚡ 什么是休眠？
+休眠文件 (hiberfil.sys) 通常占用数 GB 的磁盘空间。
+- **开启**: 允许使用“快速启动”和“休眠”功能。
+- **关闭**: 释放 C 盘空间，但会导致开机变慢。
+
+> 💡 **提示**: 建议 SSD 用户且空间紧张时关闭。
+        ]]>
+				</Description>
+
+				<Optimize>
+					<Cmd type="cmd"><![CDATA[powercfg /h off]]></Cmd>
+				</Optimize>
+
+				<Restore>
+					<Cmd type="cmd"><![CDATA[powercfg /h on]]></Cmd>
+				</Restore>
+			</Item>
+
+		</Configuration>
+
+		<Configuration category="Bloatware">
+			<Item name="卸载 Xbox 游戏栏">
+				<Tags>Xbox,GameBar,Gaming</Tags>
+				<Description><![CDATA[卸载 Xbox Game Bar 组件。需使用 PowerShell 执行。]]></Description>
+
+				<Optimize>
+					<Cmd type="ps"><![CDATA[Get-AppxPackage Microsoft.XboxGamingOverlay | Remove-AppxPackage]]></Cmd>
+				</Optimize>
+
+				<Restore>
+					<Cmd type="ps"><![CDATA[echo "请去 Microsoft Store 重新下载 Xbox Game Bar"]]></Cmd>
+				</Restore>
+			</Item>
+		</Configuration>
+	</Configurations>
+</CyanSight>
+

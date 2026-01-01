@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<CConfigurations>
+<CyanSight>
 	<Configuration category="System">
 		
 		<Item name="禁用处理器的幽灵和熔断补丁">
@@ -855,4 +855,4 @@ Windows 为了让桌面（Shell）先加载完毕流畅显示，通常会故意�
 	<Configuration category="Network">
 		
 	</Configuration>
-</CConfigurations>
+</CyanSight>

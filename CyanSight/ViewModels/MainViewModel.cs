@@ -24,12 +24,27 @@ namespace CyanSight.ViewModels
         [ObservableProperty]
         private ObservableCollection<OptimizeItem> _legacyItems = new();
 
-		[ObservableProperty]
+        // UI 绑定：脚本/命令列表
+        [ObservableProperty]
+        private ObservableCollection<OptimizeItem> _scriptItems = new();
+
+        // 搜索感知计数器 (用于 Tab 标题上的 Badge)
+        [ObservableProperty]
+        private int _coreCount;
+
+        [ObservableProperty]
+        private int _legacyCount;
+
+        [ObservableProperty]
+        private int _scriptCount;
+
+        [ObservableProperty]
 		private OptimizeItem? _selectedItem;
 
         [ObservableProperty]
         private string _searchText = "";
 
+       
         partial void OnSearchTextChanged(string value)
         {
             ApplySearchFilter();
@@ -49,14 +64,16 @@ namespace CyanSight.ViewModels
             {
                 _allSourceItems.Clear();
 
-                // 1. 读取主数据 (CyanSight.xml) -> 标记为 Normal
+                // 读取主数据 (CyanSight.xml) -> 标记为 Normal
                 LoadFile("Data.xml", ItemType.Normal);
 
-                // 2. 读取怀旧数据 (Legacy.xml) -> 标记为 Legacy
-                // 如果文件不存在也没关系，只是不显示怀旧区而已
+                // 读取怀旧数据 (Legacy.xml) -> 标记为 Legacy
                 LoadFile("Legacy.xml", ItemType.Legacy);
 
-                // 3. 初始渲染
+                // 读取脚本数据 (Script.xml) -> 标记为 Script
+                LoadFile("Script.xml", ItemType.Script);
+
+                // 初始渲染 
                 ApplySearchFilter();
             }
             catch (Exception ex)
@@ -70,25 +87,16 @@ namespace CyanSight.ViewModels
         {
 
 
-            // 1. 获取当前程序集
+            // 获取当前程序集
             var assembly = System.Reflection.Assembly.GetExecutingAssembly();
 
-            // 2. 构建资源名称
+            // 构建资源名称
             // ⚠️ 注意：资源名称的格式通常是 "命名空间.文件夹名.文件名"
-            // 假设你的 Default Namespace 是 "CyanSight"，且 XML 就在项目根目录下：
             string resourceName = $"CyanSight.Assets.{fileName}";
-
-            // 如果你的 xml 放在了名为 "Assets" 的文件夹里，上面那行要改成：
-            // string resourceName = $"CyanSight.Assets.{fileName}";
-
-            //// 3. 读取嵌入式资源流
-            //string basePath = AppDomain.CurrentDomain.BaseDirectory;
-            //string xmlPath = Path.Combine(basePath, fileName);
-            //if (!File.Exists(xmlPath)) return;
 
             try
             {
-                // 3. 从程序集中获取文件流
+                // 从程序集中获取文件流
                 using (Stream? stream = assembly.GetManifestResourceStream(resourceName))
                 {
                     if (stream == null)
@@ -99,10 +107,10 @@ namespace CyanSight.ViewModels
                         return;
                     }
 
-                    // 4. 直接从流加载 XML (XDocument 支持从 Stream 加载)
+                    // 直接从流加载 XML (XDocument 支持从 Stream 加载)
                     var doc = XDocument.Load(stream);
 
-                    //var doc = XDocument.Load(xmlPath);
+                    // var doc = XDocument.Load(xmlPath);
 
                     foreach (var config in doc.Descendants("Configuration"))
                     {
@@ -115,7 +123,7 @@ namespace CyanSight.ViewModels
                                 Id = Guid.NewGuid().ToString(),
                                 Title = element.Attribute("name")?.Value ?? "未命名",
                                 Category = category,
-                                // ⚠️ 关键点：这里直接根据传入的参数赋值，不看 XML 属性
+                                // 这里直接根据传入的参数赋值，不看 XML 属性
                                 Type = targetType,
 
                                 // === 如果是 Legacy，直接禁用 UI (只读模式) ===
@@ -126,7 +134,7 @@ namespace CyanSight.ViewModels
                                 Description = ""
                             };
 
-                            // 2. 解析 <StatusChecks> 
+                            // 解析 <StatusChecks> 
                             var statusChecksNode = element.Element("StatusChecks");
                             if (statusChecksNode != null)
                             {
@@ -141,7 +149,7 @@ namespace CyanSight.ViewModels
                                 }
                             }
 
-                            // 3. 解析 <Optimize> 指令
+                            // 解析 <Optimize> 指令
                             var optimizeNode = element.Element("Optimize");
                             if (optimizeNode != null)
                             {
@@ -163,7 +171,11 @@ namespace CyanSight.ViewModels
                                     item.OptimizeCommands.Add(new RegCommand
                                     {
                                         Type = CommandType.Cmd,
-                                        Data = cmd.Value?.Trim() ?? "" // 读取标签中间的文本
+                                        Data = cmd.Value?.Trim() ?? "", // 读取标签中间的文本
+
+                                        // 借用 ValueKind 属性来存储脚本类型 (cmd vs ps)
+                                        // 如果 XML 里没写 type，默认视为 "cmd"
+                                        ValueKind = cmd.Attribute("type")?.Value ?? "cmd"
                                     });
                                 }
                             }
@@ -200,25 +212,26 @@ namespace CyanSight.ViewModels
                                     item.RestoreCommands.Add(new RegCommand
                                     {
                                         Type = CommandType.Cmd,
-                                        Data = cmd.Value?.Trim() ?? ""
+                                        Data = cmd.Value?.Trim() ?? "",
+                                        ValueKind = cmd.Attribute("type")?.Value ?? "cmd"
                                     });
                                 }
                             }
 
-                            // 5. 处理描述文案
+                            // 处理描述文案
                             string? customDesc = element.Element("Description")?.Value;
                             if (!string.IsNullOrEmpty(customDesc))
                             {
-                                // 1. 统一换行符，防止 \r\n 造成干扰
+                                // 统一换行符，防止 \r\n 造成干扰
                                 customDesc = customDesc.Replace("\r\n", "\n").Replace("\r", "\n");
 
-                                // 2. 按行分割，但【保留空行】(去掉 StringSplitOptions.RemoveEmptyEntries)
+                                // 按行分割，但【保留空行】(去掉 StringSplitOptions.RemoveEmptyEntries)
                                 var lines = customDesc.Split('\n');
 
-                                // 3. 只去除每行前面的缩进空格 (TrimStart)，保留行尾空格 (Markdown换行需要行尾空格)
+                                // 只去除每行前面的缩进空格 (TrimStart)，保留行尾空格 (Markdown换行需要行尾空格)
                                 var cleanLines = lines.Select(line => line.TrimStart());
 
-                                // 4. 重新组合
+                                // 重新组合
                                 customDesc = string.Join("\n", cleanLines);
 
                                 if (customDesc.Contains("{AutoDetails}"))
@@ -258,14 +271,25 @@ namespace CyanSight.ViewModels
         // === 搜索与分流逻辑 ===
         private void ApplySearchFilter()
         {
-            // 1. 全局搜索 (不管它是哪个文件的，只要匹配关键词就捞出来)
+            // 全局搜索 (不管它是哪个文件的，只要匹配关键词就捞出来)
             var filtered = string.IsNullOrWhiteSpace(SearchText)
                 ? _allSourceItems
-                : _allSourceItems.Where(i => i.Matches(SearchText));
+                : _allSourceItems.Where(i => i.Matches(SearchText)).ToList();
 
-            // 2. 分流到两个 UI 列表
-            UpdateCollection(CoreItems, filtered.Where(i => i.Type == ItemType.Normal));
-            UpdateCollection(LegacyItems, filtered.Where(i => i.Type == ItemType.Legacy));
+            // 分流到三个 UI 列表
+            var core = filtered.Where(i => i.Type == ItemType.Normal).ToList();
+            var legacy = filtered.Where(i => i.Type == ItemType.Legacy).ToList();
+            var script = filtered.Where(i => i.Type == ItemType.Script).ToList();
+
+            UpdateCollection(CoreItems, core);
+            UpdateCollection(LegacyItems, legacy);
+            UpdateCollection(ScriptItems, script); 
+
+            // 更新计数器 (UI 会自动收到通知)
+            CoreCount = core.Count;
+            LegacyCount = legacy.Count;
+            ScriptCount = script.Count;
+
         }
 
         private void UpdateCollection(ObservableCollection<OptimizeItem> collection, IEnumerable<OptimizeItem> newItems)
@@ -277,7 +301,7 @@ namespace CyanSight.ViewModels
         [RelayCommand]
         private async Task ApplyChanges()
         {
-            // 1. 再次确认 (防误触的最后一道防线)
+            // 再次确认 (防误触的最后一道防线)
             var result = MessageBox.Show(
                 "您即将应用当前的优化设置。\n\n" +
                 "• 选中的项目将被【执行优化】\n" +
@@ -289,7 +313,7 @@ namespace CyanSight.ViewModels
 
             if (result != MessageBoxResult.Yes) return;
 
-            // 2. 批量执行
+            // 批量执行
             int successCount = 0;
             bool needRestart = false;
 
@@ -301,7 +325,7 @@ namespace CyanSight.ViewModels
                     // 如果是 Legacy 类型，彻底跳过！
                     // 无论它现在的 IsSelected 是 true 还是 false，都只当它是空气。
                     // 它只能看（在列表中显示状态），不能摸（UI已禁用），不能用（此处拦截）。
-                    if (item.Type == ItemType.Legacy)
+                    if (item.Type == ItemType.Legacy || item.Type == ItemType.Script)
                     {
                         continue;
                     }
@@ -427,6 +451,50 @@ namespace CyanSight.ViewModels
 				}
 			}
 		}
+
+        // 复制脚本内容到剪贴板
+        [RelayCommand]
+        private void CopyScript()
+        {
+            // 防御性编程：防止空引用
+            if (SelectedItem == null || SelectedItem.OptimizeCommands.Count == 0) return;
+
+            // 获取第一条命令的内容
+            string cmdData = SelectedItem.OptimizeCommands[0].Data;
+
+            // 写入剪贴板
+            Clipboard.SetText(cmdData);
+        }
+
+        // 尝试直接运行
+        [RelayCommand]
+        private void RunScript()
+        {
+            if (SelectedItem == null) return;
+
+            var cmd = SelectedItem.OptimizeCommands.FirstOrDefault();
+            if (cmd == null) return;
+
+            try
+            {
+                // 简单的运行逻辑，根据类型决定启动 powershell 还是 cmd
+                string fileName = (cmd.ValueKind == "ps") ? "powershell.exe" : "cmd.exe";
+                string arguments = (cmd.ValueKind == "ps")
+                    ? $"-NoExit -Command \"{cmd.Data}\""  // -NoExit 让窗口执行完不关闭，方便看结果
+                    : $"/k \"{cmd.Data}\"";               // /k 同理
+
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = fileName,
+                    Arguments = arguments,
+                    UseShellExecute = true // 必须为 true 才能弹出新窗口
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("无法启动终端: " + ex.Message);
+            }
+        }
 
         // 事件处理逻辑抽离出来
         private void Item_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
