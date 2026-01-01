@@ -244,6 +244,7 @@
 2. **磁盘空间**：开启此功能会在 C 盘生成一个巨大的 `hiberfil.sys` 休眠文件。关闭后可释放数 GB 空间。
 3. **假关机**：导致某些需要完全断电才能重置的硬件故障无法修复。
 
+> **注意**：执行时会调用 CMD 命令 `powercfg`，并修改注册表。
 ### 🌟 建议
 **强烈建议关闭**。迈向 Mac 丝滑开机的一小步
 
@@ -491,7 +492,103 @@
 			</Restore>
 		</Item>
 
-	</Configuration>
+		
+			<Item name="挂载 VHD 时不预占磁盘空间">
+				<Tags>VHD,虚拟硬盘,磁盘空间,WSL,Hyper-V,VirtualDiskExpandOnMount</Tags>
+
+				<StatusChecks>
+					<Check
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\FsDepends\Parameters"
+						Value="VirtualDiskExpandOnMount"
+						Data="4" />
+				</StatusChecks>
+
+				<Description>
+					<![CDATA[
+# 💾 VHD 动态挂载优化
+
+此选项用于优化虚拟硬盘 (VHD/VHDX) 的挂载策略，防止其占用过多的宿主机磁盘空间。
+
+### 🔧 技术原理
+* **默认行为**：Windows 挂载“动态扩展”的 VHD 时，可能会预先在物理硬盘上抢占该 VHD 的最大设定空间。
+* **优化后 (值=4)**：强制系统保持“动态”特性，**实际存了多少数据，就只占多少物理空间**。
+
+### 💡 建议
+如果你经常使用 **WSL2**、**Hyper-V** 或手动挂载 VHD 镜像，且物理硬盘空间紧张（例如 256GB SSD），**强烈推荐开启**。
+
+---
+{AutoDetails}
+            ]]>
+				</Description>
+
+				<Optimize>
+					<RegWrite
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\FsDepends\Parameters"
+						Value="VirtualDiskExpandOnMount"
+						Type="REG_DWORD"
+						Data="4"/>
+				</Optimize>
+
+				<Restore>
+					<RegWrite
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\FsDepends\Parameters"
+						Value="VirtualDiskExpandOnMount"
+						Type="REG_DWORD"
+						Data="1"/>
+				</Restore>
+			</Item>
+
+			<Item name="禁止系统内核分页">
+				<Tags>DisablePagingExecutive,内核,驱动,分页,交换</Tags>
+
+				<StatusChecks>
+					<Check
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+						Value="DisablePagingExecutive"
+						Data="1" />
+				</StatusChecks>
+
+				<Description>
+					<![CDATA[
+# ⚡ 禁止内核分页  (内存常驻) (DisablePagingExecutive)
+
+> **注意**：如果内存较小 (4GB/8GB)，开启此项可能导致应用程序可用内存不足 (OOM)。
+# 禁止将操作系统内核代码放到磁盘交换文件 / 禁用内核分页
+
+* **原理**：强制将 Windows 内核（驱动程序、系统代码）常驻在物理内存中，不允许交换到硬盘(虚拟内存)上。
+* **分析**：
+* **对于 8G/16G 用户**：如果内存满了，系统会崩溃。
+* **对于 32GB+ 用户**：**可行**。你的内存足够大，禁止内核分页可以减少微乎其微的硬盘读写延迟。
+* **结论**：或许是有那么点软用
+
+---
+{AutoDetails}
+        ]]>
+				</Description>
+
+				<Optimize>
+					<RegWrite
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+						Value="DisablePagingExecutive"
+						Type="REG_DWORD"
+						Data="1"/>
+				</Optimize>
+
+				<Restore>
+					<RegWrite
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+						Value="DisablePagingExecutive"
+						Type="REG_DWORD"
+						Data="0"/>
+				</Restore>
+			</Item>
+
+		
+		
+		
+		
+		</Configuration>
+	
 	
 		<Configuration category="Explorer">
 
@@ -610,8 +707,152 @@ Windows 为了让桌面（Shell）先加载完毕流畅显示，通常会故意�
 			</Restore>
 		</Item>
 
-					
-		
+			<Item name="取消8.3短文件名">
+				<Tags>NtfsDisable8dot3NameCreation,NTFS,MFT,短文件名,DOS兼容</Tags>
 
+				<StatusChecks>
+					<Check
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem"
+						Value="NtfsDisable8dot3NameCreation"
+						Data="2" />
+				</StatusChecks>
+
+				<Description>
+					<![CDATA[
+# ✂️ 禁用 DOS 8.3 短文件名
+
+此选项指示 NTFS 文件系统停止为新文件生成兼容 DOS 时代的短文件名（例如 `DOCUME~1`）。
+
+### 🔧 技术原理
+为了兼容 30 年前的老系统，Windows 默认会为长文件名文件额外生成一个不超过 8 个字符的别名。
+这会占用 MFT 空间，并在大文件数量目录下显著降低文件创建速度。
+
+### 💡 建议
+* **现代系统推荐开启**：它可以减少 MFT 碎片，提升文件系统吞吐量。
+* **注意**：此设置**仅对修改后新创建的文件生效**。它不会删除已存在的短文件名
+
+---
+{AutoDetails}
+        ]]>
+				</Description>
+
+				<Optimize>
+					<RegWrite
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem"
+						Value="NtfsDisable8dot3NameCreation"
+						Type="REG_DWORD"
+						Data="1"/>
+				</Optimize>
+
+				<Restore>
+					<RegWrite
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem"
+						Value="NtfsDisable8dot3NameCreation"
+						Type="REG_DWORD"
+						Data="2"/>
+				</Restore>
+			</Item>
+
+				<Item name="禁止更新文件最后访问时间">
+					<Tags>NTFS,磁盘性能,SSD寿命,I/O,NtfsDisableLastAccessUpdate</Tags>
+
+					<StatusChecks>
+						<Check
+							Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem"
+							Value="NtfsDisableLastAccessUpdate"
+							Data="1" />
+					</StatusChecks>
+
+					<Description>
+						<![CDATA[
+# 🛑 停止记录"最后访问时间" (减少磁盘写入)
+
+此选项禁止 NTFS 文件系统在每次**读取**文件时更新文件的时间戳。
+
+### 🔧 优化原理
+* **默认行为**：当你打开一张图片，即使不修改，Windows 也会写入硬盘记录“你刚才看了它”。这会导致“读”操作变成“读+写”操作。
+* **优化后**：只记录文件的**创建**和**修改**时间，不再记录**访问**时间。
+
+### ✅ 收益
+1.  **提升性能**：特别是打开包含数千个文件的文件夹时，无需并发写入数千次时间戳。
+2.  **保护 SSD**：减少不必要的元数据写入，理论上延长硬盘寿命。
+
+* **0**: 用户强制开启 - 旧版默认, Win 10 / 11 及 Server 2012 之前
+* **1**: 用户强制禁用 - 优化推荐
+* **0x80000002**: 系统管理, 默认关闭, 并保留了在特定维护场景下动态调整它的权力
+---
+{AutoDetails}
+            ]]>
+					</Description>
+
+					<Optimize>
+						<RegWrite
+							Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem"
+							Value="NtfsDisableLastAccessUpdate"
+							Type="REG_DWORD"
+							Data="1"/>
+					</Optimize>
+
+					<Restore>
+						<RegWrite
+							Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem"
+							Value="NtfsDisableLastAccessUpdate"
+							Type="REG_DWORD"
+							Data="2147483650"/>
+					</Restore>
+				</Item>
+
+		
+			<Item name="禁用快捷方式自动追踪">
+				<Tags>快捷方式,资源管理器,无响应,NTFS,NoResolveTrack</Tags>
+
+				<StatusChecks>
+					<Check
+						Key="HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer"
+						Value="NoResolveTrack"
+						Data="1" />
+				</StatusChecks>
+
+				<Description>
+					<![CDATA[
+# ⚡ 禁用快捷方式"幽灵搜索" (防止卡顿)
+
+此选项禁止 Windows 在快捷方式目标丢失时，自动尝试搜索文件的新位置。
+
+### 问题背景
+默认情况下，如果你点击一个目标文件已被移动或删除的快捷方式，Windows 会：
+1.  **扫描磁盘**：试图通过 NTFS ID 找回文件。
+2.  **扫描网络**：如果原文件在网络邻居，会尝试唤醒网络设备。
+3.  **结果**：导致资源管理器 (Explorer.exe) **假死/未响应** 数秒甚至更久。
+
+### 优化效果
+* 如果文件找不到，直接提示"路径不存在"，不再转圈等待。
+* 在连接了 NAS 或网络驱动器的环境下，效果极佳。
+
+> **代价**：如果你移动了文件，快捷方式将不会自动修复，你需要手动更新它(但这通常比自动搜索失败要好得多)。
+
+---
+{AutoDetails}
+            ]]>
+				</Description>
+
+				<Optimize>
+					<RegWrite
+						Key="HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer"
+						Value="NoResolveTrack"
+						Type="REG_DWORD"
+						Data="1"/>
+				</Optimize>
+
+				<Restore>
+					<RegDelete
+						Key="HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer"
+						Value="NoResolveTrack"/>
+				</Restore>
+			</Item>
+		</Configuration>
+
+	<Configuration category="Network">
+		
 	</Configuration>
 </CConfigurations>

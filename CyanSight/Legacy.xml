@@ -36,6 +36,10 @@
 
 ### 📅 状态说明
 * **分类**：过时/副作用优化
+* **技术原理**：
+Windows 有一种机制叫“焦点窃取保护”。当你在打字时，如果后台有个程序突然想弹窗，Windows 会让它在任务栏闪烁，而不是直接弹出来打断你。
+这个注册表值定义了“超时时间”。设为 `0` 意味着**禁用保护**，任何程序请求置顶时，Windows 会立即批准，不再等待。
+
 * **副作用**：设置为 0 后，如果你正在打字或玩游戏，后台程序弹窗会直接切断你的操作并置顶，而不是在任务栏闪烁等待。
 
 ---
@@ -84,7 +88,16 @@
 
 ### 📅 状态说明
 * **分类**：过时/玄学优化
-* **Win32PrioritySeparation**：强制前台短时间片，在某些老旧系统上有减少延迟的效果。
+* **键值 1**：`Win32PrioritySeparation` = `38` (十进制) -> `0x26` (十六进制)。
+* **技术原理**：这是一个位掩码（Bitmask），控制 CPU 如何给前台和后台进程分配“时间片（Quantum）”。
+* 默认值通常是 `2` (平衡)。
+* 设置为 `38` (0x26) 是强制让前台程序获得**更短、更多变**的时间片，理论上能减少输入延迟。
+
+
+* **键值 2 & 3**：`IRQ8Priority`, `IRQ16Priority`。
+* **分析**：这是**“玄学”优化**（Placebo）。
+* IRQ（中断请求）优先级手动设置在 Windows XP 时代可能有用，但在现代 Windows (10/11) 和 APIC 硬件架构下，手动指定 IRQ8（实时时钟）的优先级通常**被系统忽略**。这属于过时的优化手段。
+
 * **IRQ8/16Priority**：**纯安慰剂**。在 Windows XP 之后的 ACPI/APIC 硬件架构下，手动指定 IRQ 优先级已被系统内核忽略，无实际作用。
 
 ---
@@ -132,6 +145,7 @@
 
 > **⚠️ 怀旧项警告**：  
 > 对于个人电脑/游戏用途，这通常是**负优化**。因为它会抢占应用程序的物理内存，导致游戏或软件更容易被挤到虚拟内存中，从而变卡。
+* 在 Win10/11 上，系统自身的动态管理已经非常优秀。除非你把电脑当 NAS 用(频繁拷贝大文件)
 
 ---
 {AutoDetails}
@@ -155,49 +169,7 @@
 				</Restore>
 			</Item>
 
-			<Item name="禁止系统内核分页">
-				<Tags>DisablePagingExecutive,内核,驱动,分页,交换</Tags>
-
-				<StatusChecks>
-					<Check
-						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
-						Value="DisablePagingExecutive"
-						Data="1" />
-				</StatusChecks>
-
-				<Description>
-					<![CDATA[
-# ⚡ 禁止内核分页  (内存常驻) (DisablePagingExecutive)
-
-强制将 Windows **内核代码** 和 **驱动程序** 常驻在物理内存 (RAM) 中，**禁止**将其交换到硬盘页面文件。
-
-### 作用分析
-* **优点**：响应极快，避免因唤醒驱动产生的微小卡顿。  
-* **前提**：内存必须足够大（建议 16GB 以上）。
-
-> **注意**：如果内存较小 (4GB/8GB)，开启此项可能导致应用程序可用内存不足 (OOM)。
-
----
-{AutoDetails}
-        ]]>
-				</Description>
-
-				<Optimize>
-					<RegWrite
-						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
-						Value="DisablePagingExecutive"
-						Type="REG_DWORD"
-						Data="1"/>
-				</Optimize>
-
-				<Restore>
-					<RegWrite
-						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
-						Value="DisablePagingExecutive"
-						Type="REG_DWORD"
-						Data="0"/>
-				</Restore>
-			</Item>
+			
 
 			<Item name="增加文件系统 I/O 缓存">
 				<Tags>IoPageLockLimit,IO,缓存,锁定内存</Tags>
@@ -259,9 +231,15 @@
 
 强制合并服务进程，减少 `svchost.exe` 的数量。
 
-### 技术原理
-将“拆分内存阈值”设为 **4TB** (0xFFFFFFFF)。Windows 会误以为内存不足，从而触发旧机制合并进程。
+* **技术原理**：将“拆分内存阈值”设为 **4TB** (0xFFFFFFFF)。Windows 会误以为内存不足，从而触发旧机制合并进程。
+* **背景**：在 Windows 10 (1703+) 以后，如果你的内存大于 3.5GB，系统会把每个服务拆分成独立的 `svchost.exe` 进程。这样做的好处是**稳定**（一个服务崩了不会带崩其他的），坏处是**进程列表很长**，且每个进程都要占用一点点基础内存。
+* **修改**：将“拆分阈值”设为无限大（4TB）。
+* **结果**：Windows 会认为你的内存“不够大”，从而触发旧机制，将几十个服务**合并**到一个或几个 `svchost.exe` 进程中。
 
+
+* **效果**：任务管理器的进程数会骤减(比如从 150 个变成 80 个), 看起来很清爽, 也能省一点点内存。
+
+* **警告**：这个优化虽然能减少进程数，但如果某个驱动或服务有 Bug，可能会导致整个服务宿主崩溃，引发更严重的系统问题(如音频和网络同时挂掉)
 ---
 {AutoDetails}
         ]]>
@@ -369,6 +347,160 @@
 						Value="MitigationOptions"/>
 				</Restore>
 			</Item>
+
+			<Item name="开启二级缓存">
+				<Tags>SecondLevelDataCache,L2,Cache二级缓存</Tags>
+
+				<StatusChecks>
+					<Check
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+						Value="SecondLevelDataCache"
+						Data="1024" />
+				</StatusChecks>
+
+				<Description>
+					<![CDATA[
+# 开启 CPU 二级缓存
+
+* 现代 CPU 的 L2 缓存是固定的，且 Windows 硬件抽象层(HAL)能自动完美读取。
+* 个人认为没有任何优化作用，反而是在告诉操作系统错误的 CPU 参数。
+* **这是典型的"蛇油"优化, 自行判断**
+
+
+* `SecondLevelDataCache`值为内存的八分之一
+* 十进制，8G内存设为1024，16G设为2048，32G设为4096
+
+---
+{AutoDetails}
+        ]]>
+				</Description>
+
+				<Optimize>
+					<RegWrite
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+						Value="SecondLevelDataCache"
+						Type="REG_DWORD"
+						Data="1024 / 2048 / 4096"/>
+				</Optimize>
+
+				<Restore>
+					<RegWrite
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+						Value="SecondLevelDataCache"
+					Type="REG_DWORD"
+						Data="0" />
+				</Restore>
+			</Item>
+
+				<Item name="强制卸载闲置 DLL">
+					<Tags>DLL,内存泄漏,AlwaysUnloadDLL,ShellExtension,资源管理器</Tags>
+
+					<StatusChecks>
+						<Check
+							Key="HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
+							Value="AlwaysUnloadDLL"
+							Data="1" />
+					</StatusChecks>
+
+					<Description>
+						<![CDATA[
+# 🧹 强制卸载闲置 DLL
+
+此选项指示 Windows 资源管理器 (Explorer) 在不再使用动态链接库 (DLL) 时立即将其卸载。
+
+### 🔧 技术真相
+* **作用对象**：仅针对 **资源管理器加载的扩展插件**（如右键菜单项、缩略图生成器等），**不影响**其他独立程序。
+* **默认行为**：Windows 会缓存这些 DLL 以便下次快速调用。
+* **开启后**：用完即清理。
+
+### ⚖️ 结论
+* 对于 256MB 内存的 Windows 98，这是神技。
+* 对于 16GB+ 内存的 Windows 11，这是负优化（牺牲速度换取微不足道的内存）。
+* 优点: 防止有 Bug 的右键菜单插件长期占用内存（内存泄漏），减少 Explorer.exe 的内存占用。
+
+---
+{AutoDetails}
+            ]]>
+					</Description>
+
+					<Optimize>
+						<RegWrite
+							Key="HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
+							Value="AlwaysUnloadDLL"
+							Type="REG_DWORD"
+							Data="1"/>
+					</Optimize>
+
+					<Restore>
+						<RegDelete
+							Key="HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
+							Value="AlwaysUnloadDLL"/>
+					</Restore>
+				</Item>
+
+				<Item name="开启MFT存储空间">
+					<Tags>MFT,NTFS,文件系统,碎片,磁盘性能,NtfsMftZoneReservation</Tags>
+
+					<StatusChecks>
+						<Check
+							Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem"
+							Value="NtfsMftZoneReservation"
+							Data="1" />
+					</StatusChecks>
+
+					<Description>
+						<![CDATA[
+# 💿 MFT 智能空间预留 / 优化 NTFS MFT 预留空间 / 减少文件碎片
+
+* XP/Win7 时代遗留的优化项
+此选项调整 NTFS 主文件表 (MFT) 的保留空间大小，以减少在文件数量巨大时的磁盘碎片。
+
+## 🔧 技术原理
+MFT 是 NTFS 记录所有文件信息的数据库。如果 MFT 空间不足，它会分散存储，导致读取文件变慢。
+* ???????默认值????????
+* **默认值 (1)**：预留卷大小的 12.5%。
+* **优化值 (2)**：预留卷大小的 **25%**。
+* 1、2、3、4分别为小的、中型的、较大的、最大的MFT保留空间。
+
+## 场景
+如果你硬盘`1T`, 值设为 `4`，  
+相当于告诉系统把这 1TB 里的 500GB 划为 MFT 专用保留区
+
+虽然当磁盘写满时，Windows 会征用这块保留区存普通文件，
+但这会加剧 MFT 的碎片化(普通文件混进来了)，违背了优化的初衷。
+
+对于 SSD 的极强随机读写性能，MFT 碎片化对性能的影响远不如机械硬盘时代那么致命。
+
+* 对于普通用户：默认的 12.5% (1TB 预留 125GB)存放索引已经绰绰有余，  
+* 除非你有数百万个几 KB 的小文件（比如自建了缓存服务器）。
+
+### 💡 建议
+* **推荐开启**：如果你是开发者(大量 Git 源码)、设计师(大量素材图片)或硬盘文件数量超过几十万个。
+* **无需开启**：如果这台电脑主要用于游戏或看剧(大文件居多)，默认的 12.5% 已足够。
+
+> **注意**：原网传教程建议设为 `4` (50%)，这在现代大容量硬盘上是极度浪费且不必要的，本工具采用更安全的 `2` (25%)。
+
+---
+{AutoDetails}
+            ]]>
+					</Description>
+
+					<Optimize>
+						<RegWrite
+							Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem"
+							Value="NtfsMftZoneReservation"
+							Type="REG_DWORD"
+							Data="1"/>
+					</Optimize>
+
+					<Restore>
+						<RegWrite
+							Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem"
+							Value="NtfsMftZoneReservation"
+							Type="REG_DWORD"
+							Data="0"/>
+					</Restore>
+				</Item>
 
 		</Configuration>
 </CConfigurations>
