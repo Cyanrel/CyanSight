@@ -2,7 +2,7 @@
 
 <PropertyGroup>
 	<OutputType>WinExe</OutputType>
-	<TargetFramework>net8.0-windows</TargetFramework>
+	<TargetFramework>net8.0-windows7.0</TargetFramework>
 	<Nullable>enable</Nullable>
 	<ImplicitUsings>enable</ImplicitUsings>
 	<UseWPF>true</UseWPF>
@@ -13,13 +13,11 @@
 	<SelfContained>true</SelfContained>
 	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 	<DebugType>embedded</DebugType>
+	<ApplicationIcon>Assets\app.ico</ApplicationIcon>
 </PropertyGroup>
 	
 <PropertyGroup Condition="'$(Configuration)' == 'Release'">
   <PublishTrimmed>false</PublishTrimmed>
-
-	<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
-
 	<PublishReadyToRun>false</PublishReadyToRun>
 </PropertyGroup>
 
@@ -39,6 +37,10 @@
     <EmbeddedResource Include="Legacy.xml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+   <Resource Include="Assets\app.ico" />
   </ItemGroup>
 
 </Project>

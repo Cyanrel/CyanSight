@@ -11,9 +11,11 @@ using System.Windows.Shapes;
 using Wpf.Ui.Controls;
 using CyanSight.ViewModels;
 using Wpf.Ui.Appearance;
+using System.Runtime.Versioning;
 
 namespace CyanSight
 {
+    [SupportedOSPlatform("windows")]
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>

@@ -8,6 +8,7 @@
         xmlns:vm="clr-namespace:CyanSight.ViewModels"
         mc:Ignorable="d"
         Title="CyanSight" 
+        Icon="pack://application:,,,/Assets/app.ico"
         WindowStartupLocation="CenterScreen"
         ExtendsContentIntoTitleBar="True"
         WindowBackdropType="Mica"
@@ -96,6 +97,7 @@
                 </Grid.RowDefinitions>
 
                 <ui:TextBox Grid.Row="0" 
+                            Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                             PlaceholderText="搜索优化项..." 
                             Icon="{ui:SymbolIcon Search24}" 
                             Margin="0,0,12,12"/>
