@@ -37,4 +37,9 @@ Surface例外(因为我自己有,顺便就做了)
 ## 测试设备: 
 Surface Laptop 7 U7-268V 32 + 1T\
 Surface Go 2 LTE m3-8100Y 8 + 128
+<img width="2304" height="1651" alt="屏幕截图 2026-01-01 214443" src="https://github.com/user-attachments/assets/ea6817ab-5a97-4a9e-b4f2-d1c8dfd5f530" />
+<img width="2304" height="1651" alt="屏幕截图 2026-01-01 214458" src="https://github.com/user-attachments/assets/3808fc7d-7344-4014-a6a5-5c3c1c4d79fb" />
+<img width="2304" height="1651" alt="屏幕截图 2026-01-01 214506" src="https://github.com/user-attachments/assets/c657f5bf-9988-4d04-b86b-2782b4ba5bdd" />
+
+
 
