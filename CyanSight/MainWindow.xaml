@@ -304,30 +304,48 @@
                                         </Style>
                                     </StackPanel.Style>
 
-                                    <TextBlock Text="此操作需要执行命令，建议复制后手动运行。" 
-                       Foreground="{DynamicResource SystemFillColorCautionBrush}" 
-                       FontSize="12" Margin="0,0,0,8"/>
+                                    <TextBlock Text="执行命令预览" 
+               Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+               FontSize="12" Margin="0,0,0,8"/>
 
-                                    <TextBox Text="{Binding SelectedItem.OptimizeCommands[0].Data, Mode=OneWay}"
+                                    <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
+            BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="6">
+
+                                        <Grid>
+                                            <TextBox Text="{Binding SelectedItem.OptimizeCommands[0].Data, Mode=OneWay}"
                      IsReadOnly="True"
                      FontFamily="Consolas, Courier New, Monospace"
-                     Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                     FontSize="13"
+                     Background="Transparent"
                      BorderThickness="0"
-                     Padding="10"
-                     TextWrapping="Wrap"/>
+                     Padding="16,12,48,12" 
+                     TextWrapping="Wrap"
+                     VerticalContentAlignment="Center"
+                     Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
 
-                                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                                        <ui:Button Icon="{ui:SymbolIcon Copy24}" 
-                           Appearance="Primary"
-                           Content="复制命令" 
-                           Command="{Binding CopyScriptCommand}"
-                           Margin="0,0,8,0"/>
+                                            <ui:Button Command="{Binding CopyScriptCommand}"
+                       ToolTipService.ToolTip="复制命令"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Top"
+                       Margin="4"
+                       Padding="6"
+                       Appearance="Transparent"
+                       BorderThickness="0">
+                                                <ui:SymbolIcon Symbol="Copy24" FontSize="16" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                            </ui:Button>
+                                        </Grid>
+                                    </Border>
 
-                                        <ui:Button Icon="{ui:SymbolIcon Play24}" 
-                           Appearance="Secondary"
-                           Content="尝试运行 (Beta)" 
-                           Command="{Binding RunScriptCommand}"/>
-                                    </StackPanel>
+                                    
+                                    <ui:Button Icon="{ui:SymbolIcon Play24}" 
+                                                Appearance="Secondary"
+                                                Content="尝试在终端中运行 (Beta)" 
+                                                HorizontalAlignment="Left"
+                                                Margin="0,16,0,0"
+                                                Command="{Binding RunScriptCommand}"/>
+
                                 </StackPanel>
 
                             </StackPanel>
