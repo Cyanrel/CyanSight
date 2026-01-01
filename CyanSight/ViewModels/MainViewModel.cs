@@ -76,7 +76,7 @@ namespace CyanSight.ViewModels
             // 2. 构建资源名称
             // ⚠️ 注意：资源名称的格式通常是 "命名空间.文件夹名.文件名"
             // 假设你的 Default Namespace 是 "CyanSight"，且 XML 就在项目根目录下：
-            string resourceName = $"CyanSight.{fileName}";
+            string resourceName = $"CyanSight.Assets.{fileName}";
 
             // 如果你的 xml 放在了名为 "Assets" 的文件夹里，上面那行要改成：
             // string resourceName = $"CyanSight.Assets.{fileName}";

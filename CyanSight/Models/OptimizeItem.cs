@@ -113,7 +113,7 @@ namespace CyanSight.Models
             sb.Append(Title).Append(" ");
             sb.Append(Description).Append(" ");
             sb.Append(Category).Append(" ");
-            sb.Append(RawTags).Append(" "); // 加入 XML 里的 <Tags>
+            sb.Append(RawTags).Append(" "); // XML 里的 <Tags>
 
             // 2. 自动吸入注册表键名 (Deep Search 核心)
             // 用户搜 "HiberbootEnabled" 或 "SearchboxTaskbarMode" 时能直接命中

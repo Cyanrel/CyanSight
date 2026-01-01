@@ -20,6 +20,10 @@
   <PublishTrimmed>false</PublishTrimmed>
 	<PublishReadyToRun>false</PublishReadyToRun>
 </PropertyGroup>
+	
+<ItemGroup>
+  <None Remove="Assets\Script.xml" />
+</ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
@@ -28,15 +32,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Data.xml">
+    <EmbeddedResource Include="Assets\Data.xml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Legacy.xml">
+    <EmbeddedResource Include="Assets\Legacy.xml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="Assets\Script.xml" />
   </ItemGroup>
 
   <ItemGroup>
