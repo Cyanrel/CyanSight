@@ -1,0 +1,375 @@
+<CConfigurations>
+	<Configuration category="Memory">
+		<Item name="Demo">
+			<Tags>1,2,3,demo,cyanrel</Tags>
+			<Description>
+				<![CDATA[
+           # ⚠️ 不推荐操作
+           ... 解释为什么这是负优化 ...  
+		   demo  
+		   demo  
+		   demo  
+		   ---
+    {AutoDetails}
+           ]]>
+			</Description>
+		</Item>
+	</Configuration>
+	<Configuration category="System">
+
+		<Item name="提高前台程序的显示速度">
+			<Tags>Focus,ForegroundLockTimeout,焦点,弹窗,前台锁定</Tags>
+
+			<StatusChecks>
+				<Check
+					Key="HKEY_CURRENT_USER\Control Panel\Desktop"
+					Value="ForegroundLockTimeout"
+					Data="0" />
+			</StatusChecks>
+
+			<Description>
+				<![CDATA[
+# 🚀 提高前台程序的显示速度
+
+### 📝 原始描述
+允许程序更“霸道”地抢占焦点，禁用 Windows 的防焦点窃取保护。
+
+### 📅 状态说明
+* **分类**：过时/副作用优化
+* **副作用**：设置为 0 后，如果你正在打字或玩游戏，后台程序弹窗会直接切断你的操作并置顶，而不是在任务栏闪烁等待。
+
+---
+    {AutoDetails}
+            ]]>
+			</Description>
+
+			<Optimize>
+				<RegWrite
+					Key="HKEY_CURRENT_USER\Control Panel\Desktop"
+					Value="ForegroundLockTimeout"
+					Type="REG_DWORD"
+					Data="0"/>
+			</Optimize>
+
+			<Restore>
+				<RegWrite
+					Key="HKEY_CURRENT_USER\Control Panel\Desktop"
+					Value="ForegroundLockTimeout"
+					Type="REG_DWORD"
+					Data="200000"/>
+			</Restore>
+		</Item>
+
+		<Item name="优化处理器性能">
+			
+			<Tags>CPU,Win32PrioritySeparation,IRQ8Priority,IRQ16Priority,中断请求,时间片</Tags>
+
+			<StatusChecks>
+				<Check
+					Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\PriorityControl"
+					Value="Win32PrioritySeparation"
+					Data="38" />
+				<Check
+					Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\PriorityControl"
+					Value="IRQ8Priority"
+					Data="1" />
+			</StatusChecks>
+
+			<Description>
+				<![CDATA[
+# 🧠 优化处理器性能 (Win32PrioritySeparation)
+
+### 📝 原始描述
+通过调整 CPU 时间片分配（Win32PrioritySeparation=38）和手动指定 IRQ 中断优先级来提升性能。
+
+### 📅 状态说明
+* **分类**：过时/玄学优化
+* **Win32PrioritySeparation**：强制前台短时间片，在某些老旧系统上有减少延迟的效果。
+* **IRQ8/16Priority**：**纯安慰剂**。在 Windows XP 之后的 ACPI/APIC 硬件架构下，手动指定 IRQ 优先级已被系统内核忽略，无实际作用。
+
+---
+    {AutoDetails}
+            ]]>
+			</Description>
+
+			<Optimize>
+				<RegWrite Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\PriorityControl" Value="Win32PrioritySeparation" Type="REG_DWORD" Data="38"/>
+				<RegWrite Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\PriorityControl" Value="IRQ8Priority" Type="REG_DWORD" Data="1"/>
+				<RegWrite Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\PriorityControl" Value="IRQ16Priority" Type="REG_DWORD" Data="2"/>
+			</Optimize>
+
+			<Restore>
+				<RegWrite Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\PriorityControl" Value="Win32PrioritySeparation" Type="REG_DWORD" Data="2"/>
+				<RegDelete Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\PriorityControl" Value="IRQ8Priority"/>
+				<RegDelete Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\PriorityControl" Value="IRQ16Priority"/>
+			</Restore>
+		</Item>
+
+		
+	</Configuration>
+		
+		<Configuration category="System">
+
+			<Item name="启用大系统缓存">
+				<Tags>LargeSystemCache,缓存,性能,内存管理</Tags>
+
+				<StatusChecks>
+					<Check
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+						Value="LargeSystemCache"
+						Data="1" />
+				</StatusChecks>
+
+				<Description>
+					<![CDATA[
+# 🧠 启用 LargeSystemCache  (服务器模式)
+
+告诉 Windows 内存管理器采取 **“服务器模式”**。
+
+### 核心机制
+* **默认 (0)**：优先将内存留给**前台应用程序**（如浏览器、游戏）。  
+* **优化 (1)**：优先将内存用于**文件系统缓存**（加速文件读写）。
+
+> **⚠️ 怀旧项警告**：  
+> 对于个人电脑/游戏用途，这通常是**负优化**。因为它会抢占应用程序的物理内存，导致游戏或软件更容易被挤到虚拟内存中，从而变卡。
+
+---
+{AutoDetails}
+        ]]>
+				</Description>
+
+				<Optimize>
+					<RegWrite
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+						Value="LargeSystemCache"
+						Type="REG_DWORD"
+						Data="1"/>
+				</Optimize>
+
+				<Restore>
+					<RegWrite
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+						Value="LargeSystemCache"
+						Type="REG_DWORD"
+						Data="0"/>
+				</Restore>
+			</Item>
+
+			<Item name="禁止系统内核分页">
+				<Tags>DisablePagingExecutive,内核,驱动,分页,交换</Tags>
+
+				<StatusChecks>
+					<Check
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+						Value="DisablePagingExecutive"
+						Data="1" />
+				</StatusChecks>
+
+				<Description>
+					<![CDATA[
+# ⚡ 禁止内核分页  (内存常驻) (DisablePagingExecutive)
+
+强制将 Windows **内核代码** 和 **驱动程序** 常驻在物理内存 (RAM) 中，**禁止**将其交换到硬盘页面文件。
+
+### 作用分析
+* **优点**：响应极快，避免因唤醒驱动产生的微小卡顿。  
+* **前提**：内存必须足够大（建议 16GB 以上）。
+
+> **注意**：如果内存较小 (4GB/8GB)，开启此项可能导致应用程序可用内存不足 (OOM)。
+
+---
+{AutoDetails}
+        ]]>
+				</Description>
+
+				<Optimize>
+					<RegWrite
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+						Value="DisablePagingExecutive"
+						Type="REG_DWORD"
+						Data="1"/>
+				</Optimize>
+
+				<Restore>
+					<RegWrite
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+						Value="DisablePagingExecutive"
+						Type="REG_DWORD"
+						Data="0"/>
+				</Restore>
+			</Item>
+
+			<Item name="增加文件系统 I/O 缓存">
+				<Tags>IoPageLockLimit,IO,缓存,锁定内存</Tags>
+
+				<StatusChecks>
+					<Check
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+						Value="IoPageLockLimit"
+						Data="10000000" />
+				</StatusChecks>
+
+				<Description>
+					<![CDATA[
+# 💾 调整 IoPageLockLimit  
+增加文件管理系统缓存  
+设置系统在进行 I/O 操作时可锁定的最大内存字节数。  
+
+### 设置值
+* **目标值**：`10000000` (十进制)
+
+> **⚠️ 怀旧项警告 (安慰剂)**：  
+> 这是一个 **XP/2000 时代** 的遗留设置。现代 Windows (10/11) 的内存管理器已经非常智能，手动设置固定值通常不如系统自动管理高效。仅作为怀旧保留。
+
+---
+{AutoDetails}
+        ]]>
+				</Description>
+
+				<Optimize>
+					<RegWrite
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+						Value="IoPageLockLimit"
+						Type="REG_DWORD"
+						Data="10000000"/>
+				</Optimize>
+
+				<Restore>
+					<RegWrite
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+						Value="IoPageLockLimit"
+						Type="REG_DWORD"
+						Data="0"/>
+				</Restore>
+			</Item>
+
+			<Item name="优化进程数量">
+				<Tags>SvcHostSplitThresholdInKB,进程数,内存,SvcHost</Tags>
+
+				<StatusChecks>
+					<Check
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control"
+						Value="SvcHostSplitThresholdInKB"
+						Data="4294967295" />
+				</StatusChecks>
+
+				<Description>
+					<![CDATA[
+# 📉 SvcHost 进程合并
+
+强制合并服务进程，减少 `svchost.exe` 的数量。
+
+### 技术原理
+将“拆分内存阈值”设为 **4TB** (0xFFFFFFFF)。Windows 会误以为内存不足，从而触发旧机制合并进程。
+
+---
+{AutoDetails}
+        ]]>
+				</Description>
+
+				<Optimize>
+					<RegWrite
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control"
+						Value="SvcHostSplitThresholdInKB"
+						Type="REG_DWORD"
+						Data="4294967295"/>
+				</Optimize>
+
+				<Restore>
+					<RegDelete
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control"
+						Value="SvcHostSplitThresholdInKB"/>
+				</Restore>
+			</Item>
+
+			<Item name="禁用高精度事件定时器">
+				<Tags>hpet,定时器,FPS,微卡顿,Start</Tags>
+
+				<StatusChecks>
+					<Check
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\hpet"
+						Value="Start"
+						Data="4" />
+				</StatusChecks>
+
+				<Description>
+					<![CDATA[
+# ⏱️ 禁用 HPET (高精度定时器)
+
+停止 `hpet` 服务并禁用其驱动。
+
+### 作用与争议
+* **目的**：强制系统使用 CPU 自带的 **TSC** 计时器，理论上延迟更低。
+* **副作用**：在现代系统上通常不需要调整。如果强制关闭，可能导致系统时间不同步（如音画不同步）。
+
+> **建议**：仅在旧主板或 BIOS 存在 Bug 导致游戏掉帧时尝试。
+
+---
+{AutoDetails}
+        ]]>
+				</Description>
+
+				<Optimize>
+					<RegWrite
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\hpet"
+						Value="Start"
+						Type="REG_DWORD"
+						Data="4"/>
+					<Cmd>net stop hpet</Cmd>
+				</Optimize>
+
+				<Restore>
+					<RegWrite
+						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\hpet"
+						Value="Start"
+						Type="REG_DWORD"
+						Data="2"/>
+					<Cmd>net start hpet</Cmd>
+				</Restore>
+			</Item>
+
+			<Item name="关闭乱序内存">
+				<Tags>MitigationOptions,ASLR,乱序内存,安全,漏洞防护</Tags>
+
+				<StatusChecks>
+					<Check
+						Key="HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Session Manager\kernel"
+						Value="MitigationOptions"
+						Data="22,22,22,00,00,02,00,00,00,02,00,00,00,00,00,00" />
+				</StatusChecks>
+
+				<Description>
+					<![CDATA[
+# 🛑 关闭 Exploit Protection (禁用 ASLR)
+
+**警告：极度危险！** 此选项将修改 `MitigationOptions` 以关闭 ASLR（地址空间布局随机化）。
+
+### 为什么不应该使用？
+* **安全风险**：内存地址固定化，相当于把“大门钥匙挂在门把手上”。黑客可以轻松预测关键组件地址进行缓冲区溢出攻击。
+* **性能迷思**：现代 CPU 拥有 MMU 硬件加速，开启 ASLR 的性能损耗几乎为 0。
+
+> **适用场景**：仅限完全断网环境下，运行 2000 年以前依赖固定内存地址的**工业老软件**。
+
+---
+{AutoDetails}
+        ]]>
+				</Description>
+
+				<Optimize>
+					<RegWrite
+						Key="HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Session Manager\kernel"
+						Value="MitigationOptions"
+						Type="REG_BINARY"
+						Data="22,22,22,00,00,02,00,00,00,02,00,00,00,00,00,00"/>
+				</Optimize>
+
+				<Restore>
+					<RegDelete
+						Key="HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Session Manager\kernel"
+						Value="MitigationOptions"/>
+				</Restore>
+			</Item>
+
+		</Configuration>
+</CConfigurations>
+
