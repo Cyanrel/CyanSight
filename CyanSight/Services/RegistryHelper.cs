@@ -1,11 +1,14 @@
-﻿using Microsoft.Win32;
+﻿using CyanSight.Models;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using CyanSight.Models;
-using System.Security.Principal;
-using System.Runtime.Versioning;
 using System.Linq;
+using System.Runtime.Versioning;
+using System.Security.Principal;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Controls;
 
 namespace CyanSight.Services
 {
@@ -16,7 +19,7 @@ namespace CyanSight.Services
         {
             try
             {
-                // === 智能修复：如果传入的 root 是空的，尝试从 path 里重新解析 ===
+                // === 如果传入的 root 是空的，尝试从 path 里重新解析 ===
                 if (string.IsNullOrWhiteSpace(root))
                 {
                     // 假设 path 实际上是全路径 (例如 "HKEY_LOCAL_MACHINE\SYSTEM\...")
@@ -170,7 +173,7 @@ namespace CyanSight.Services
                 // bug调试期可以启用下面这行，看看具体报什么错
                 System.Windows.MessageBox.Show($"CMD启动失败: {ex.Message}");
 
-                Debug.WriteLine($"[CMD执行失败] {ex.Message}");
+                //Debug.WriteLine($"[CMD执行失败] {ex.Message}");
             }
         }
 
@@ -183,12 +186,12 @@ namespace CyanSight.Services
 
             var view = RegistryView.Registry64;
 
-            // === 核心修改：针对 HKCU 的用户上下文重定向 ===
+            // === 针对 HKCU 的用户上下文重定向 ===
             if (cleanRoot == "HKCU" || cleanRoot == "HKEY_CURRENT_USER")
             {
                 try
                 {
-                    // 1. 尝试在 HKEY_USERS 中找到当前登录用户的 SID
+                    // 尝试在 HKEY_USERS 中找到当前登录用户的 SID
                     using var usersKey = RegistryKey.OpenBaseKey(RegistryHive.Users, view);
                     var subKeyNames = usersKey.GetSubKeyNames();
 
@@ -199,7 +202,7 @@ namespace CyanSight.Services
 
                     if (!string.IsNullOrEmpty(userSid))
                     {
-                        // 必须加 true，表示以【可写】方式打开！
+                        // true，表示以【可写】方式打开！
                         return usersKey.OpenSubKey(userSid, true);
                     }
                 }
@@ -216,7 +219,6 @@ namespace CyanSight.Services
             return cleanRoot switch
             {
                 "HKCR" or "HKEY_CLASSES_ROOT" => RegistryKey.OpenBaseKey(RegistryHive.ClassesRoot, view),
-                // HKCU 已经在上面处理了，这里留个 fallback
                 "HKLM" or "HKEY_LOCAL_MACHINE" => RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view),
                 "HKU" or "HKEY_USERS" => RegistryKey.OpenBaseKey(RegistryHive.Users, view),
                 "HKCC" or "HKEY_CURRENT_CONFIG" => RegistryKey.OpenBaseKey(RegistryHive.CurrentConfig, view),
@@ -237,8 +239,8 @@ namespace CyanSight.Services
             // 如果找不到斜杠，或者斜杠在开头（虽然TrimStart处理了，防万一），则无法解析
             if (index < 1) return (fullPath, "");
 
-            string root = fullPath.Substring(0, index).Trim();
-            string path = fullPath.Substring(index + 1).Trim();
+            string root = fullPath[..index].Trim();
+            string path = fullPath[(index + 1)..].Trim();
 
             return (root, path);
         }
@@ -251,7 +253,7 @@ namespace CyanSight.Services
             {
                 "REG_DWORD" => int.TryParse(data, out int i) ? i : 0,
                 "REG_QWORD" => long.TryParse(data, out long l) ? l : 0L,
-                "REG_BINARY" => new byte[0],
+                "REG_BINARY" => Array.Empty<byte>(),
                 _ => data
             };
         }

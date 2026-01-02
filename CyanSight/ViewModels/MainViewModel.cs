@@ -1,32 +1,34 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CyanSight.Models;
+using CyanSight.Services;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Windows;
 using System.Xml.Linq;
-using CyanSight.Models;
-using CyanSight.Services;
+using System.Text.RegularExpressions;
 
 namespace CyanSight.ViewModels
 {
 	public partial class MainViewModel : ObservableObject
 	{
         // 全量数据源 (内存大池子)
-        private List<OptimizeItem> _allSourceItems = new();
+        private readonly List<OptimizeItem> _allSourceItems = [];
 
         // UI 绑定：正常优化列表
         [ObservableProperty]
-        private ObservableCollection<OptimizeItem> _coreItems = new();
+        private ObservableCollection<OptimizeItem> _coreItems = [];
 
         // UI 绑定：怀旧/避坑列表
         [ObservableProperty]
-        private ObservableCollection<OptimizeItem> _legacyItems = new();
+        private ObservableCollection<OptimizeItem> _legacyItems = [];
 
         // UI 绑定：脚本/命令列表
         [ObservableProperty]
-        private ObservableCollection<OptimizeItem> _scriptItems = new();
+        private ObservableCollection<OptimizeItem> _scriptItems = [];
 
         // 搜索感知计数器 (用于 Tab 标题上的 Badge)
         [ObservableProperty]
@@ -44,7 +46,13 @@ namespace CyanSight.ViewModels
         [ObservableProperty]
         private string _searchText = "";
 
-       
+        // 定义编译时正则
+        [GeneratedRegex(@"^\d+[、\.]")]
+        private static partial Regex MyTitleRegex();
+
+        // 静态复用，避免每次点击按钮都重新分配内存
+        private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
+
         partial void OnSearchTextChanged(string value)
         {
             ApplySearchFilter();
@@ -85,8 +93,6 @@ namespace CyanSight.ViewModels
         // === 通用文件读取方法 ===
         private void LoadFile(string fileName, ItemType targetType)
         {
-
-
             // 获取当前程序集
             var assembly = System.Reflection.Assembly.GetExecutingAssembly();
 
@@ -97,22 +103,20 @@ namespace CyanSight.ViewModels
             try
             {
                 // 从程序集中获取文件流
-                using (Stream? stream = assembly.GetManifestResourceStream(resourceName))
+                using Stream? stream = assembly.GetManifestResourceStream(resourceName);
+                
+                if (stream == null)
                 {
-                    if (stream == null)
-                    {
-                        // 调试技巧：如果这里报错，说明资源名不对。
-                        // 可以在这里打断点，运行 string[] names = assembly.GetManifestResourceNames(); 查看真实名字。
-                        //System.Diagnostics.Debug.WriteLine($"❌ 错误：未找到嵌入资源 '{resourceName}'。请检查文件属性是否设为 Embedded Resource。");
-                        return;
-                    }
+                    // 调试技巧：如果这里报错，说明资源名不对。
+                    // 可以在这里打断点，运行 string[] names = assembly.GetManifestResourceNames(); 查看真实名字。
+                    //System.Diagnostics.Debug.WriteLine($"❌ 错误：未找到嵌入资源 '{resourceName}'。请检查文件属性是否设为 Embedded Resource。");
+                    return;
+                }
 
-                    // 直接从流加载 XML (XDocument 支持从 Stream 加载)
-                    var doc = XDocument.Load(stream);
+                // 直接从流加载 XML (XDocument 支持从 Stream 加载)
+                var doc = XDocument.Load(stream);
 
-                    // var doc = XDocument.Load(xmlPath);
-
-                    foreach (var config in doc.Descendants("Configuration"))
+                foreach (var config in doc.Descendants("Configuration"))
                     {
                         string category = config.Attribute("category")?.Value ?? "General";
 
@@ -123,6 +127,10 @@ namespace CyanSight.ViewModels
                                 Id = Guid.NewGuid().ToString(),
                                 Title = element.Attribute("name")?.Value ?? "未命名",
                                 Category = category,
+
+                                // 调用辅助方法，根据 Category 分配不同的图标
+                                Icon = GetIconByCategory(category),
+
                                 // 这里直接根据传入的参数赋值，不看 XML 属性
                                 Type = targetType,
 
@@ -218,24 +226,22 @@ namespace CyanSight.ViewModels
                                 }
                             }
 
-                            // 处理描述文案
+                            // [重构] 描述与技术细节分离逻辑
+                            // 1. 先生成技术细节表格，存入新属性 TechDetails
+                            item.TechDetails = GenerateTechDetails(item);
+
+                            // 2. 处理描述文案 Description (只保留文字描述)
                             string? customDesc = element.Element("Description")?.Value;
                             if (!string.IsNullOrEmpty(customDesc))
                             {
-                                // 统一换行符，防止 \r\n 造成干扰
                                 customDesc = customDesc.Replace("\r\n", "\n").Replace("\r", "\n");
-
-                                // 按行分割，但【保留空行】(去掉 StringSplitOptions.RemoveEmptyEntries)
                                 var lines = customDesc.Split('\n');
-
-                                // 只去除每行前面的缩进空格 (TrimStart)，保留行尾空格 (Markdown换行需要行尾空格)
                                 var cleanLines = lines.Select(line => line.TrimStart());
-
-                                // 重新组合
                                 customDesc = string.Join("\n", cleanLines);
 
+                                // 如果 XML 里写了占位符，直接替换为空（因为我们会在 UI 上把 TechDetails 放在下面）
                                 if (customDesc.Contains("{AutoDetails}"))
-                                    item.Description = customDesc.Replace("{AutoDetails}", GenerateTechDetails(item));
+                                    item.Description = customDesc.Replace("{AutoDetails}", "");
                                 else
                                     item.Description = customDesc;
                             }
@@ -243,21 +249,47 @@ namespace CyanSight.ViewModels
                             {
                                 item.Description = GenerateAutoDescription(item);
                             }
-                            
-                            // 1. 构建搜索索引
+
+                            // ... 后续代码 (构建索引等) ...
+                            //// 处理描述文案
+                            //string? customDesc = element.Element("Description")?.Value;
+                            //if (!string.IsNullOrEmpty(customDesc))
+                            //{
+                            //    // 统一换行符，防止 \r\n 造成干扰
+                            //    customDesc = customDesc.Replace("\r\n", "\n").Replace("\r", "\n");
+
+                            //    // 按行分割，但【保留空行】(去掉 StringSplitOptions.RemoveEmptyEntries)
+                            //    var lines = customDesc.Split('\n');
+
+                            //    // 只去除每行前面的缩进空格 (TrimStart)，保留行尾空格 (Markdown换行需要行尾空格)
+                            //    var cleanLines = lines.Select(line => line.TrimStart());
+
+                            //    // 重新组合
+                            //    customDesc = string.Join("\n", cleanLines);
+
+                            //    if (customDesc.Contains("{AutoDetails}"))
+                            //        item.Description = customDesc.Replace("{AutoDetails}", GenerateTechDetails(item));
+                            //    else
+                            //        item.Description = customDesc;
+                            //}
+                            //else
+                            //{
+                            //    item.Description = GenerateAutoDescription(item);
+                            //}
+
+                            // 构建搜索索引
                             item.BuildSearchIndex();
 
-                            // 2. 检查系统状态 (Legacy 项目也可以检查状态，告知用户是否“不幸”开启了该功能)
+                            // 检查系统状态 (Legacy 项目也可以检查状态，告知用户是否“不幸”开启了该功能)
                             item.IsSelected = RegistryHelper.CheckAll(item.StatusChecks);
 
-                            // 3. 绑定事件
+                            // 绑定事件
                             item.PropertyChanged += Item_PropertyChanged;
 
-                            // 4. 加入总池子
+                            // 加入总池子
                             _allSourceItems.Add(item);
                         }
-                    }
-                }
+                    }                
             }
             catch (Exception ex)
             {
@@ -274,12 +306,12 @@ namespace CyanSight.ViewModels
             // 全局搜索 (不管它是哪个文件的，只要匹配关键词就捞出来)
             var filtered = string.IsNullOrWhiteSpace(SearchText)
                 ? _allSourceItems
-                : _allSourceItems.Where(i => i.Matches(SearchText)).ToList();
+               : [.. _allSourceItems.Where(i => i.Matches(SearchText))];
 
             // 分流到三个 UI 列表
-            var core = filtered.Where(i => i.Type == ItemType.Normal).ToList();
-            var legacy = filtered.Where(i => i.Type == ItemType.Legacy).ToList();
-            var script = filtered.Where(i => i.Type == ItemType.Script).ToList();
+            List<OptimizeItem> core = [.. filtered.Where(i => i.Type == ItemType.Normal)];
+            List<OptimizeItem> legacy = [.. filtered.Where(i => i.Type == ItemType.Legacy)];
+            List<OptimizeItem> script = [.. filtered.Where(i => i.Type == ItemType.Script)];
 
             UpdateCollection(CoreItems, core);
             UpdateCollection(LegacyItems, legacy);
@@ -292,7 +324,7 @@ namespace CyanSight.ViewModels
 
         }
 
-        private void UpdateCollection(ObservableCollection<OptimizeItem> collection, IEnumerable<OptimizeItem> newItems)
+        private static void UpdateCollection(ObservableCollection<OptimizeItem> collection, IEnumerable<OptimizeItem> newItems)
         {
             collection.Clear();
             foreach (var item in newItems) collection.Add(item);
@@ -396,7 +428,7 @@ namespace CyanSight.ViewModels
             }
 
             // 序列化为 JSON 字符串
-            string json = JsonSerializer.Serialize(profile, new JsonSerializerOptions { WriteIndented = true });
+            string json = JsonSerializer.Serialize(profile, _jsonOptions);
 
             // 保存文件
             var dialog = new Microsoft.Win32.SaveFileDialog
@@ -446,12 +478,29 @@ namespace CyanSight.ViewModels
 					MessageBox.Show($"配置导入成功！\n成功匹配并更新了 {matchCount} 个选项。\n\n请点击【立即应用】以生效。", "导入成功");
 				}
 				catch (Exception ex)
+
 				{
 					MessageBox.Show("配置文件格式错误或已损坏。\n" + ex.Message, "导入失败", MessageBoxButton.OK, MessageBoxImage.Error);
 				}
 			}
 		}
 
+        // 复制注册表路径
+        [RelayCommand]
+        private void CopyRegKey()
+        {
+            // 安全检查：确保当前有选中项，且包含至少一条指令
+            if (SelectedItem == null || SelectedItem.OptimizeCommands.Count == 0) return;
+
+            // 获取第一条指令的 Key (通常优化项的主要路径都在第一条)
+            string keyPath = SelectedItem.OptimizeCommands[0].FullKeyPath;
+
+            if (!string.IsNullOrEmpty(keyPath))
+            {
+                Clipboard.SetText(keyPath);
+                // MessageBox.Show("注册表路径已复制！", "提示"); // 可选：嫌弹窗烦可以注释掉
+            }
+        }
         // 复制脚本内容到剪贴板
         [RelayCommand]
         private void CopyScript()
@@ -507,27 +556,28 @@ namespace CyanSight.ViewModels
             }
         }
 
-		private static string GetIconByCategory(string category)
-		{
-			return category.ToLower() switch
-			{
-				"explorer" => "\uE8B7", // 文件夹图标
-				"system" => "\uE770",   // CPU/系统图标
-				"privacy" => "\uE72E",  // 锁图标
-				_ => "\uE9D9"           // 默认工具箱图标
-			};
-		}
+        private static string GetIconByCategory(string category)
+        {
+            return category.ToLowerInvariant() switch
+            {
+                "explorer" => "\uE8B7", // 📂 文件夹/资源管理器
+                "system" => "\uE770",   // ⚙️ CPU/系统芯片
+                "network" => "\uE774",  // 🌐 [新增] 网络/地球仪图标
+                "privacy" => "\uE72E",  // 🔒 隐私/锁
+                _ => "\uE9D9"           // 🛠️ 默认/工具箱
+            };
+        }
 
-		// 辅助方法：拆分 "HKEY_CU\Software\..." 为 "HKEY_CU" 和 "Software\..."
-		private static (string root, string path) ParseRegistryPath(string fullPath)
+        // 辅助方法：拆分 "HKEY_CU\Software\..." 为 "HKEY_CU" 和 "Software\..."
+        private static (string root, string path) ParseRegistryPath(string fullPath)
 		{
 			if (string.IsNullOrEmpty(fullPath)) return ("", "");
 
 			int firstSlash = fullPath.IndexOf('\\');
 			if (firstSlash == -1) return (fullPath, "");
 
-			string root = fullPath.Substring(0, firstSlash);
-			string path = fullPath.Substring(firstSlash + 1);
+			string root = fullPath[..firstSlash];
+			string path = fullPath[(firstSlash + 1)..];
 			return (root, path);
 		}
 
@@ -535,6 +585,18 @@ namespace CyanSight.ViewModels
         private static string GenerateTechDetails(OptimizeItem item)
         {
             var sb = new StringBuilder();
+
+            // 智能检测：是否为单路径模式？
+            // 如果优化和还原指令都指向同一个 RootKey，我们就认为它是“单路径”
+            // 在单路径模式下，Markdown 里不再重复打印 "📂 位置: ... "，避免冗余
+            var allCmds = item.OptimizeCommands.Concat(item.RestoreCommands).ToList();
+            var uniqueKeys = allCmds
+                .Where(c => c.Type != CommandType.Cmd && !string.IsNullOrEmpty(c.FullKeyPath))
+                .Select(c => c.FullKeyPath)
+                .Distinct()
+                .ToList();
+
+            bool isSingleKeyMode = (uniqueKeys.Count <= 1);
 
             // 辅助本地函数：转换注册表类型名称
             string GetShortType(string kind) => kind switch
@@ -558,7 +620,7 @@ namespace CyanSight.ViewModels
                 var regCommands = commands.Where(c => c.Type != CommandType.Cmd).ToList();
 
                 // 1. 先列出 CMD 命令
-                if (cmdCommands.Any())
+                if (cmdCommands.Count > 0)
                 {
                     sb.AppendLine("> 💻 **命令执行**\n");
                     foreach (var cmd in cmdCommands)
@@ -569,12 +631,15 @@ namespace CyanSight.ViewModels
                 }
 
                 // 2. 再列出注册表操作
-                if (regCommands.Any())
+                if (regCommands.Count > 0)
                 {
                     var groupedCommands = regCommands.GroupBy(c => c.FullKeyPath);
                     foreach (var group in groupedCommands)
                     {
-                        sb.AppendLine($"> 📂 **位置**: `{group.Key}`\n");
+                        if (!isSingleKeyMode)
+                        {
+                            sb.AppendLine($"> 📂 **位置**: `{group.Key}`\n");
+                        }
                         // 调整表格定义
                         // - 移除 "键名 (Key)" 中的英文，缩短表头
                         // - 关键：将对齐方式全部改为左对齐 (:---)，强制列宽收缩
@@ -625,17 +690,17 @@ namespace CyanSight.ViewModels
         private static string GenerateAutoDescription(OptimizeItem item)
 		{
 			var sb = new StringBuilder();
-			// 自动生成标题
-			string cleanTitle = System.Text.RegularExpressions.Regex.Replace(item.Title, @"^\d+[、\.]", "");
-			sb.AppendLine($"# {cleanTitle}");
+            // 自动生成标题
+            string cleanTitle = MyTitleRegex().Replace(item.Title, "");
+            sb.AppendLine($"# {cleanTitle}");
 			sb.AppendLine($"> 🏷️ **分类**: {item.Category}");
 			sb.AppendLine();
 			sb.AppendLine("## 📝 功能概述");
 			sb.AppendLine("此选项由自动生成。启用它将修改系统配置以达到优化目的。");
 			sb.AppendLine();
 
-			// 追加技术细节
-			sb.AppendLine(GenerateTechDetails(item));
+			//// 追加技术细节
+			//sb.AppendLine(GenerateTechDetails(item));
 
 			return sb.ToString();
 		}
@@ -692,10 +757,10 @@ namespace CyanSight.ViewModels
             string presetNameCN = "";
             int count = 0;
 
-            // 2. 先全部取消勾选（重置状态）
+            // 先全部取消勾选（重置状态）
             foreach (var item in _allSourceItems) item.IsSelected = false;
 
-            // 3. 遍历并根据策略勾选
+            // 遍历并根据策略勾选
             foreach (var item in _allSourceItems)
             {
                 bool shouldSelect = false;

@@ -254,14 +254,10 @@
 			</Description>			
 
 			<Optimize>
-				<RegWrite Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Power" Value="HiberbootEnabled" Type="REG_DWORD" Data="0"/>
-
-				<Cmd>powercfg /h off</Cmd>
+				<RegWrite Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Power" Value="HiberbootEnabled" Type="REG_DWORD" Data="0"/>				
 			</Optimize>
 
-			<Restore>
-				<Cmd>powercfg /h on</Cmd>
-
+			<Restore>				
 				<RegDelete Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Power" Value="HiberbootEnabled"/>
 			</Restore>
 		</Item>
@@ -456,42 +452,6 @@
 				<RegWrite Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\flpydisk" Value="Start" Type="REG_DWORD" Data="3"/>
 			</Restore>
 		</Item>
-
-		<Item name="彻底卸载 Xbox 与游戏栏">
-
-			<Tags>InstallPath,Xbox,游戏栏,卸载,GameBar</Tags>
-
-			<StatusChecks>
-				<Check Key="HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Xbox\GameBar" Value="InstallPath" Data="" />
-			</StatusChecks>
-			
-			<Description>
-				<![CDATA[
-# 🗑️ 彻底卸载 Xbox 与 Game Bar
-# 你都用优化软件还用得上xbox, 是不是不懂事?
-
-### 🚀 作用
-执行 PowerShell 命令，从系统中彻底移除 Xbox 应用和 Xbox Game Bar 组件。
-
-### ⚠️ 警告
-* 这会导致依赖 Xbox 服务的游戏无法运行。
-* 如果你只玩 Steam 游戏，通常没有影响。
-        ]]>
-			</Description>			
-
-			<Optimize>
-				<Cmd>powershell -Command "Get-AppxPackage Microsoft.XboxGamingOverlay -AllUsers | Remove-AppxPackage"</Cmd>
-				<Cmd>powershell -Command "Get-AppxPackage Microsoft.XboxApp -AllUsers | Remove-AppxPackage"</Cmd>
-				<Cmd>powershell -Command "Get-AppxPackage Microsoft.Xbox.TCUI -AllUsers | Remove-AppxPackage"</Cmd>
-				<Cmd>powershell -Command "Get-AppxPackage Microsoft.XboxSpeechToTextOverlay -AllUsers | Remove-AppxPackage"</Cmd>
-			</Optimize>
-
-			<Restore>
-				
-				<Cmd></Cmd>
-			</Restore>
-		</Item>
-
 		
 			<Item name="挂载 VHD 时不预占磁盘空间">
 				<Tags>VHD,虚拟硬盘,磁盘空间,WSL,Hyper-V,VirtualDiskExpandOnMount</Tags>

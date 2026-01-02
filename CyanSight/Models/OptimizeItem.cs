@@ -76,19 +76,23 @@ namespace CyanSight.Models
         // 显式指定 Type，强行告诉 Serializer 用哪个类
         [XmlArray("StatusChecks")]
         [XmlArrayItem("Check", Type = typeof(RegCheckRule))]
-        public List<RegCheckRule> StatusChecks { get; set; } = new();
+        public List<RegCheckRule> StatusChecks { get; set; } = [];
+
+        // 专门存储技术细节（表格部分），与 Description（描述部分）分离
+        [XmlIgnore]
+        public string TechDetails { get; set; } = "";
 
         // === 执行指令 ===
         [XmlArray("Optimize")]
         [XmlArrayItem("RegWrite", Type = typeof(RegCommand))]
         [XmlArrayItem("Cmd", Type = typeof(RegCommand))]
-        public List<RegCommand> OptimizeCommands { get; set; } = new();
+        public List<RegCommand> OptimizeCommands { get; set; } = [];
 
         [XmlArray("Restore")]
         [XmlArrayItem("RegDelete", typeof(RegCommand))]
         [XmlArrayItem("RegWrite", typeof(RegCommand))] // 兼容某些还原是写入操作
         [XmlArrayItem("Cmd", typeof(RegCommand))]
-        public List<RegCommand> RestoreCommands { get; set; } = new();
+        public List<RegCommand> RestoreCommands { get; set; } = [];
 
         [ObservableProperty]
         private bool _isSelected;
@@ -111,10 +115,10 @@ namespace CyanSight.Models
             var sb = new StringBuilder();
 
             // 1. 基础信息
-            sb.Append(Title).Append(" ");
-            sb.Append(Description).Append(" ");
-            sb.Append(Category).Append(" ");
-            sb.Append(RawTags).Append(" "); // XML 里的 <Tags>
+            sb.Append(Title).Append(' ');
+            sb.Append(Description).Append(' ');
+            sb.Append(Category).Append(' ');
+            sb.Append(RawTags).Append(' '); // XML 里的 <Tags>
 
             // 2. 自动吸入注册表键名 (Deep Search 核心)
             // 用户搜 "HiberbootEnabled" 或 "SearchboxTaskbarMode" 时能直接命中
@@ -124,7 +128,7 @@ namespace CyanSight.Models
                 {
                     // 加入键名 (ValueName)
                     if (!string.IsNullOrEmpty(cmd.ValueName))
-                        sb.Append(cmd.ValueName).Append(" ");
+                        sb.Append(cmd.ValueName).Append(' ');
 
                     // 加入路径末尾 (Key Path) - 比如 ...\Explorer\Serialize
                     // 防止全路径导致搜索结果太杂，只取最后一段
@@ -132,7 +136,7 @@ namespace CyanSight.Models
                     {
                         var parts = cmd.FullKeyPath.Split('\\');
                         if (parts.Length > 0)
-                            sb.Append(parts.Last()).Append(" ");
+                            sb.Append(parts.Last()).Append(' ');
                     }
                 }
             }

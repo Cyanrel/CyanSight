@@ -7,6 +7,7 @@
         xmlns:md="clr-namespace:MdXaml;assembly=MdXaml"
         xmlns:vm="clr-namespace:CyanSight.ViewModels"
         xmlns:models="clr-namespace:CyanSight.Models"
+        xmlns:services="clr-namespace:CyanSight.Services"
         mc:Ignorable="d"
         Title="CyanSight" 
         Icon="pack://application:,,,/Assets/app.ico"
@@ -22,22 +23,24 @@
     </Window.DataContext>
 
     <Window.Resources>
-        <Style x:Key="FluentTabItemStyle" 
-               TargetType="TabItem">
-            <Setter Property="FontSize" 
-                    Value="14"/>
-            <Setter Property="Background" 
-                    Value="Transparent"/>
-            <Setter Property="Foreground" 
-                    Value="{DynamicResource TextFillColorSecondaryBrush}"/>
-            <Setter Property="FontWeight" 
-                    Value="Medium"/>
-            <Setter Property="BorderThickness" 
-                    Value="0"/>
-            <Setter Property="Padding" 
-                    Value="16,8"/>
-            <Setter Property="Margin" 
-                    Value="0,0"/>
+       
+        <Thickness x:Key="TabContentMargin">0,16,0,0</Thickness>
+
+        <Style x:Key="FeatureListViewStyle" TargetType="ListView">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="Margin" Value="{StaticResource TabContentMargin}"/>
+        </Style>
+
+        <Style x:Key="FluentTabItemStyle" TargetType="TabItem">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Margin" Value="0,0,0,0"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">
@@ -47,10 +50,10 @@
                                 Margin="0" 
                                 SnapsToDevicePixels="True">
                             <ContentPresenter x:Name="ContentSite"
-                                      VerticalAlignment="Center"
-                                      HorizontalAlignment="Center"
-                                      ContentSource="Header"
-                                      Margin="{TemplateBinding Padding}"/>
+                                                VerticalAlignment="Center"
+                                                HorizontalAlignment="Center"
+                                                ContentSource="Header"
+                                                Margin="{TemplateBinding Padding}"/> 
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" 
@@ -65,12 +68,19 @@
                                      Value="True">
                                 <Setter TargetName="Border" 
                                         Property="Background" 
-                                        Value="{DynamicResource SubtleFillColorSecondaryBrush}"/>
+                                        Value="{DynamicResource SubtleFillColorSecondaryBrush}"/>  
                                 <Setter Property="Foreground" 
                                         Value="{DynamicResource TextFillColorPrimaryBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="HeaderTemplate">
+                <Setter.Value>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" FontSize="14" FontWeight="Medium"/>
+                    </DataTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
@@ -106,134 +116,121 @@
                 <TabControl Grid.Row="1" 
                             Background="Transparent" 
                             BorderThickness="0" 
-                            Padding="0">
-
+                            Padding="0"
+                            Margin="0,0,12,0">    
 
                     <TabControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <UniformGrid Rows="1"/>
                         </ItemsPanelTemplate>
                     </TabControl.ItemsPanel>
-                    
-                    <TabItem Style="{StaticResource FluentTabItemStyle}">
-                        <TabItem.Header>
-                            <TextBlock>
-                <Run Text="🚀 优化 " />
-                                
 
-                            </TextBlock>
-                        </TabItem.Header>
-                        <Grid Margin="-5,5,0,0">
-                            <ListView Grid.Row="1"
-  ItemsSource="{Binding CoreItems}"
-  Background="Transparent"
-  BorderThickness="0"
-  SelectedItem="{Binding SelectedItem}"
-  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                <ListView.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="0,6">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <CheckBox IsChecked="{Binding IsSelected}" 
-                                  IsEnabled="{Binding IsEnabled}" 
-                                  Grid.Column="0" Margin="0,0,12,0"/>
-                                            <StackPanel Grid.Column="1" 
-                                    VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Title}" 
-                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
-                                       FontWeight="Medium" 
-                                       TextTrimming="CharacterEllipsis"/>
-                                                <TextBlock Text="{Binding Category}" 
-                                       FontSize="10" 
-                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
-                                       Margin="0,2,0,0"/>
-                                            </StackPanel>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ListView.ItemTemplate>
-                            </ListView>
-                        </Grid>
+                    <TabItem Header="🚀 优化 " Style="{StaticResource FluentTabItemStyle}">
+                        <ListView ItemsSource="{Binding CoreItems}"
+                  SelectedItem="{Binding SelectedItem}"
+                  Style="{StaticResource FeatureListViewStyle}">
+
+                            <ListView.Margin>-5,16,0,0</ListView.Margin>
+
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <CheckBox IsChecked="{Binding IsSelected}" 
+                                      IsEnabled="{Binding IsEnabled}" 
+                                      Grid.Column="0" 
+                                      Margin="0,0,12,0"/>
+                                        <ui:FontIcon Glyph="{Binding Icon}"
+                                         Grid.Column="1"
+                                         FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                         FontSize="16"
+                                         Margin="0,0,12,0"
+                                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+
+                                        <StackPanel Grid.Column="2" 
+                                        VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}" 
+                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
+                                           FontWeight="Medium" 
+                                           TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+
+                            </ListView.ItemTemplate>
+                        </ListView>
                     </TabItem>
 
-                    <TabItem Style="{StaticResource FluentTabItemStyle}">
-                        <TabItem.Header>
-                            <TextBlock>
-                <Run Text="🏛️ 怀旧 " />
-                                
-                
-                            </TextBlock>
-                        </TabItem.Header>
-                        <Grid Margin="0,5,0,0">
-                            <ListView Grid.Row="2" 
-                                      ItemsSource="{Binding LegacyItems}" 
-                                      Background="Transparent" 
-                                      BorderThickness="0"
-                                      SelectedItem="{Binding SelectedItem}">
-                                <ListView.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="0,6" Opacity="0.8">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <ui:SymbolIcon Symbol="History24" 
-                                       Grid.Column="0" 
-                                       Margin="0,0,12,0" 
-                                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
-                                            <StackPanel Grid.Column="1" 
-                                    VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Title}" 
-                                       TextTrimming="CharacterEllipsis" 
-                                       Foreground="Gray" 
-                                       TextDecorations="Strikethrough"/>
-                                                <TextBlock Text="已过时" 
-                                       FontSize="10" 
-                                       Margin="0,2,0,0" 
-                                       Foreground="Gray"/>
-                                            </StackPanel>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ListView.ItemTemplate>
-                            </ListView>
-                        </Grid>
+                    <TabItem Header="🏛️ 怀旧 " Style="{StaticResource FluentTabItemStyle}">
+                        <ListView ItemsSource="{Binding LegacyItems}"
+                  SelectedItem="{Binding SelectedItem}"
+                  Style="{StaticResource FeatureListViewStyle}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,6" Opacity="0.8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ui:SymbolIcon Symbol="History24" 
+                                           Grid.Column="0" 
+                                           Margin="0,0,12,0" 
+                                           Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
+                                        <StackPanel Grid.Column="1" 
+                                        VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}" 
+                                           TextTrimming="CharacterEllipsis" 
+                                           Foreground="Gray" 
+                                           TextDecorations="Strikethrough"/>
+                                            <TextBlock Text="已过时" 
+                                           FontSize="10" 
+                                           Margin="0,2,0,0" 
+                                           Foreground="Gray"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+
+                            </ListView.ItemTemplate>
+                        </ListView>
                     </TabItem>
 
-                    <TabItem Style="{StaticResource FluentTabItemStyle}">
-                        <TabItem.Header>
-                            <TextBlock>
-                <Run Text="💻 命令 " />
-                                
-          
-                            </TextBlock>
-                        </TabItem.Header>
+                    <TabItem Header="💻 命令 " Style="{StaticResource FluentTabItemStyle}">
+                        <ListView ItemsSource="{Binding ScriptItems}"
+                  SelectedItem="{Binding SelectedItem}"
+                  Style="{StaticResource FeatureListViewStyle}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ui:SymbolIcon Symbol="Code24" 
+                                           Grid.Column="0" 
+                                           Margin="0,0,12,0" 
+                                           Foreground="{DynamicResource SystemFillColorCautionBrush}"/>
 
-                        <Grid Margin="0,5,0,0">
-                            <ListView ItemsSource="{Binding ScriptItems}" 
-                      Background="Transparent" 
-                      BorderThickness="0"
-                      SelectedItem="{Binding SelectedItem}">
-                                <ListView.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="0,6">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <ui:SymbolIcon Symbol="Code24" Grid.Column="0" Margin="0,0,12,0" Foreground="{DynamicResource SystemFillColorCautionBrush}"/>
+                                        <StackPanel Grid.Column="1" 
+                                        VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}" 
+                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
+                                           FontWeight="Medium"/>
+                                            <TextBlock Text="脚本 / 手动执行" 
+                                           FontSize="10" 
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+                                           Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
 
-                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Title}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontWeight="Medium"/>
-                                                <TextBlock Text="脚本 / 手动执行" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,2,0,0"/>
-                                            </StackPanel>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ListView.ItemTemplate>
-                            </ListView>
-                        </Grid>
+                            </ListView.ItemTemplate>
+                        </ListView>
                     </TabItem>
+
                 </TabControl>
             </Grid>
 
@@ -248,130 +245,180 @@
                      Margin="12,12,12,12" 
                      Background="Transparent"
                      BorderThickness="0">
-                <Grid>
-                    <TextBlock Text="请在左侧选择一个项目查看详情" 
-                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                               Visibility="{Binding SelectedItem, Converter={StaticResource NullToVisibleConverter}}"
-                               Foreground="Gray"/>
+                <ScrollViewer Visibility="{Binding SelectedItem, Converter={StaticResource NullToCollapsedConverter}}"
+              VerticalScrollBarVisibility="Auto"
+              HorizontalScrollBarVisibility="Disabled"
+              Padding="0,0,12,0">
+                    <StackPanel Margin="32,24,20,32">
+                        <TextBlock Text="{Binding SelectedItem.Title}" 
+                   FontSize="28" FontWeight="SemiBold" TextWrapping="Wrap"
+                   Margin="0,0,0,16"/>
 
-                    <Grid Visibility="{Binding SelectedItem, Converter={StaticResource NullToCollapsedConverter}}">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-
-                        <Border Grid.Row="0"
-        Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"                           
-        BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}"                       
-        BorderThickness="0,0,0,1" 
-        Padding="32,24,32,24">
-
-                            <StackPanel>
-                                <TextBlock Text="{Binding SelectedItem.Title}" FontSize="24" FontWeight="SemiBold"/>
-
-                                <ui:ToggleSwitch IsChecked="{Binding SelectedItem.IsSelected, Mode=TwoWay}" 
+                        <ui:ToggleSwitch IsChecked="{Binding SelectedItem.IsSelected, Mode=TwoWay}" 
                          IsEnabled="{Binding SelectedItem.IsEnabled}" 
-                         Margin="0,16,0,0">
-                                    <ui:ToggleSwitch.Style>
-                                        <Style TargetType="ui:ToggleSwitch" BasedOn="{StaticResource {x:Type ui:ToggleSwitch}}">
-                                            <Setter Property="Content" Value="启用此优化 (将修改注册表)"/>
-                                            <Setter Property="Visibility" Value="Visible"/>
-                                            <Style.Triggers>
-                                                <MultiDataTrigger>
-                                                    <MultiDataTrigger.Conditions>
-                                                        <Condition Binding="{Binding SelectedItem.IsEnabled}" Value="False"/>
-                                                        <Condition Binding="{Binding SelectedItem.IsSelected}" Value="True"/>
-                                                    </MultiDataTrigger.Conditions>
-                                                    <Setter Property="Content" Value="⚠️ 检测状态：系统中已启用 (此项已过时)"/>
-                                                </MultiDataTrigger>
-                                                <DataTrigger Binding="{Binding SelectedItem.Type}" Value="{x:Static models:ItemType.Script}">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </ui:ToggleSwitch.Style>
-                                </ui:ToggleSwitch>
-
-                                <StackPanel Margin="0,16,0,0" Orientation="Vertical">
-                                    <StackPanel.Style>
-                                        <Style TargetType="StackPanel">
+                         Margin="0,0,0,24">
+                            <ui:ToggleSwitch.Style>
+                                <Style TargetType="ui:ToggleSwitch" BasedOn="{StaticResource {x:Type ui:ToggleSwitch}}">
+                                    <Setter Property="Content" Value="启用此优化 (修改注册表)"/>
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding SelectedItem.IsEnabled}" Value="False"/>
+                                                <Condition Binding="{Binding SelectedItem.IsSelected}" Value="True"/>
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="Content" Value="⚠️ 检测状态：系统中已启用 (此项已过时)"/>
+                                        </MultiDataTrigger>
+                                        <DataTrigger Binding="{Binding SelectedItem.Type}" Value="{x:Static models:ItemType.Script}">
                                             <Setter Property="Visibility" Value="Collapsed"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding SelectedItem.Type}" Value="{x:Static models:ItemType.Script}">
-                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </StackPanel.Style>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ui:ToggleSwitch.Style>
+                        </ui:ToggleSwitch>
 
-                                    <TextBlock Text="执行命令预览" 
-               Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
-               FontSize="12" Margin="0,0,0,8"/>
+                        <StackPanel Margin="0,0,0,24">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedItem.Type}" Value="{x:Static models:ItemType.Script}">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="执行命令预览" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12" Margin="0,0,0,8"/>
+                            <Border Background="{DynamicResource ControlFillColorSecondaryBrush}" 
+                                    BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}" 
+                                    BorderThickness="1" 
+                                    CornerRadius="6">
+                                <Grid>
+                                    <TextBox Text="{Binding SelectedItem.OptimizeCommands[0].Data, Mode=OneWay}" IsReadOnly="True" FontFamily="Consolas, Courier New, Monospace" 
+                                             FontSize="13" 
+                                             Background="Transparent" 
+                                             BorderThickness="0" 
+                                             Padding="16,12,48,12" 
+                                             TextWrapping="Wrap" 
+                                             TextAlignment="Left"
+                                             VerticalContentAlignment="Center" 
+                                             Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                    <ui:Button Command="{Binding CopyScriptCommand}" 
+                                               ToolTipService.ToolTip="复制命令" 
+                                               HorizontalAlignment="Right" 
+                                               VerticalAlignment="Top" 
+                                               Margin="4" Padding="6" 
+                                               Appearance="Transparent" 
+                                               BorderThickness="0">
+                                        <ui:SymbolIcon Symbol="Copy24" 
+                                                       FontSize="16" 
+                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                    </ui:Button>
+                                </Grid>
+                            </Border>
+                            <ui:HyperlinkButton Content="尝试直接运行 (Beta)" Margin="0,4,0,0" HorizontalAlignment="Left" Command="{Binding RunScriptCommand}">
+                                <ui:HyperlinkButton.Icon>
+                                    <ui:SymbolIcon Symbol="Play24" FontSize="14"/>
+                                </ui:HyperlinkButton.Icon>
+                            </ui:HyperlinkButton>
+                        </StackPanel>
 
-                                    <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
-            BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}"
-            BorderThickness="1"
-            CornerRadius="6">
+                        <Rectangle Height="1" 
+                                   Fill="{DynamicResource SurfaceStrokeColorDefaultBrush}" 
+                                   Margin="0,0,0,24" 
+                                   Opacity="0.6"/>  
 
-                                        <Grid>
-                                            <TextBox Text="{Binding SelectedItem.OptimizeCommands[0].Data, Mode=OneWay}"
-                     IsReadOnly="True"
-                     FontFamily="Consolas, Courier New, Monospace"
-                     FontSize="13"
-                     Background="Transparent"
-                     BorderThickness="0"
-                     Padding="16,12,48,12" 
-                     TextWrapping="Wrap"
-                     VerticalContentAlignment="Center"
-                     Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-
-                                            <ui:Button Command="{Binding CopyScriptCommand}"
-                       ToolTipService.ToolTip="复制命令"
-                       HorizontalAlignment="Right"
-                       VerticalAlignment="Top"
-                       Margin="4"
-                       Padding="6"
-                       Appearance="Transparent"
-                       BorderThickness="0">
-                                                <ui:SymbolIcon Symbol="Copy24" FontSize="16" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                            </ui:Button>
-                                        </Grid>
-                                    </Border>
-
-                                    
-                                    <ui:Button Icon="{ui:SymbolIcon Play24}" 
-                                                Appearance="Secondary"
-                                                Content="尝试在终端中运行 (Beta)" 
-                                                HorizontalAlignment="Left"
-                                                Margin="0,16,0,0"
-                                                Command="{Binding RunScriptCommand}"/>
-
-                                </StackPanel>
-
-                            </StackPanel>
-                        </Border>
-
-                        <md:MarkdownScrollViewer Grid.Row="1" 
-                                                 Markdown="{Binding SelectedItem.Description}" 
+                        <md:MarkdownScrollViewer Markdown="{Binding SelectedItem.Description}" 
+                                                services:ScrollFix.FixMouseWheel="True"
                                                  FlowDirection="LeftToRight"
                                                  HorizontalScrollBarVisibility="Disabled"
-                                                 VerticalScrollBarVisibility="Auto"
-                                                 Margin="0">
-
+                                                 VerticalScrollBarVisibility="Disabled" 
+                                                 Margin="0,0,0,24"> 
                             <md:MarkdownScrollViewer.MarkdownStyle>
                                 <Style TargetType="FlowDocument">
                                     <Setter Property="FontFamily" Value="Microsoft YaHei UI, Segoe UI"/>
                                     <Setter Property="FontSize" Value="14"/>
                                     <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
                                     <Setter Property="TextAlignment" Value="Left"/>
-                                    <Setter Property="PagePadding" Value="32"/>
+                                    <Setter Property="PagePadding" Value="0"/>
                                     <Setter Property="LineHeight" Value="24"/>
                                 </Style>
                             </md:MarkdownScrollViewer.MarkdownStyle>
-
                         </md:MarkdownScrollViewer>
-                    </Grid>
-                </Grid>
+
+                        
+                        <StackPanel Margin="0,0,0,24">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedItem.Type}" Value="{x:Static models:ItemType.Script}">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+
+                            <TextBlock Text="📂 目标位置 (Registry Key)" 
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+                       FontSize="12" Margin="0,0,0,8"/>
+
+                            <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                    BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="6">
+                                <Grid>
+                                    <TextBox Text="{Binding SelectedItem.OptimizeCommands[0].FullKeyPath, Mode=OneWay}"
+                             IsReadOnly="True"
+                             FontFamily="Consolas, Courier New, Monospace"
+                             FontSize="13"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Padding="16,12,48,12" 
+                             TextWrapping="Wrap"
+                                             TextAlignment="Left"
+                                  
+                             VerticalContentAlignment="Center"
+                             Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+
+                                    <ui:Button Command="{Binding CopyRegKeyCommand}"
+                               ToolTipService.ToolTip="复制路径"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Top"
+                               Margin="4"
+                               Padding="6"
+                               Appearance="Transparent"
+                               BorderThickness="0">
+                                        <ui:SymbolIcon Symbol="Copy24" FontSize="16" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                    </ui:Button>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+
+                        <Rectangle Height="1" 
+           Fill="{DynamicResource SurfaceStrokeColorDefaultBrush}" 
+           Margin="0,0,0,24" 
+           Opacity="0.6"/>
+
+                        <md:MarkdownScrollViewer Markdown="{Binding SelectedItem.TechDetails}" 
+                                                 services:ScrollFix.FixMouseWheel="True"
+                                 FlowDirection="LeftToRight"
+                                 HorizontalScrollBarVisibility="Disabled"
+                                 VerticalScrollBarVisibility="Disabled"
+                                 Margin="0">
+                            <md:MarkdownScrollViewer.MarkdownStyle>
+                                <Style TargetType="FlowDocument">
+                                    <Setter Property="FontFamily" Value="Microsoft YaHei UI, Segoe UI"/>
+                                    <Setter Property="FontSize" Value="14"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                    <Setter Property="PagePadding" Value="0"/>
+                                    <Setter Property="LineHeight" Value="24"/>
+                                </Style>
+                            </md:MarkdownScrollViewer.MarkdownStyle>
+                        </md:MarkdownScrollViewer>
+
+                    </StackPanel>
+                </ScrollViewer>
             </ui:Card>
         </Grid>
 

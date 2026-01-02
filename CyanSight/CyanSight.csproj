@@ -2,50 +2,53 @@
 
 <PropertyGroup>
 	<OutputType>WinExe</OutputType>
-	<TargetFramework>net8.0-windows7.0</TargetFramework>
+	<TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+
+<SupportedOSPlatform>windows10.0.19041.0</SupportedOSPlatform>
+
+<TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+		<SupportedOSPlatform>windows10.0.19041.0</SupportedOSPlatform>
+
+	
 	<Nullable>enable</Nullable>
 	<ImplicitUsings>enable</ImplicitUsings>
 	<UseWPF>true</UseWPF>
 	<ApplicationManifest>app.manifest</ApplicationManifest>
 
+	<Version>1.1.0</Version>
+	<FileVersion>1.1.0.0</FileVersion>
+	<AssemblyVersion>1.1.0.0</AssemblyVersion>
+
+	<Authors>Cyanrel</Authors>
+	<Company>CyanSight</Company>
+	<Description>一个优雅, 现代化的 Windows 系统优化工具。</Description>
+	<Copyright>Copyright © 2024-2026</Copyright>
+	
 	<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 	<PublishSingleFile>true</PublishSingleFile>
 	<SelfContained>true</SelfContained>
 	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 	<DebugType>embedded</DebugType>
 	<ApplicationIcon>Assets\app.ico</ApplicationIcon>
+	<SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
 </PropertyGroup>
 	
 <PropertyGroup Condition="'$(Configuration)' == 'Release'">
   <PublishTrimmed>false</PublishTrimmed>
 	<PublishReadyToRun>false</PublishReadyToRun>
 </PropertyGroup>
-	
-<ItemGroup>
-  <None Remove="Assets\Script.xml" />
-</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="MdXaml" Version="1.27.0" />
-    <PackageReference Include="WPF-UI" Version="4.1.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+		<PackageReference Include="MdXaml" Version="1.27.0" />
+		<PackageReference Include="WPF-UI" Version="4.1.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="Assets\Data.xml">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="Assets\*.xml" />
+		<EmbeddedResource Include="Assets\*.xml" />
 
-  <ItemGroup>
-    <EmbeddedResource Include="Assets\Legacy.xml">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Assets\Script.xml" />
-  </ItemGroup>
-
-  <ItemGroup>
-   <Resource Include="Assets\app.ico" />
-  </ItemGroup>
+		<Resource Include="Assets\app.ico" />
+	</ItemGroup>
 
 </Project>
