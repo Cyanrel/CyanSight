@@ -1,8 +1,8 @@
 # CyanSight 
 
-## Slogan: 
-Optimize with insight. \
-(带着洞察去优化)
+### Slogan: 
+`Optimize with insight.` \
+(`带着洞察去优化`)
 
 初衷是手上有两台Surface
 
@@ -33,6 +33,17 @@ Surface例外(因为我自己有,顺便就做了)
 本应用设计逻辑也参考了`ZyperWave`的开源项目`[ZyperWin++ 4.1](https://github.com/ZyperWave/ZyperWinOptimize)`\
 区别在于符合Windows 11 的fluent UI风格, 好看反正\
 然后也告诉你为什么要优化这项
+
+微软现在埋头去搞WIN UI3了, 我又搞不来这个\
+整一整WPF + WPF UI得了
+
+当然组件控件都是看齐Windows11, 能调用原生那是绝对不用外包\
+整体做到就跟个系统级应用似的\
+支持根据系统自动切换深/浅色和Mira/Mira Alt\
+UI方面打磨了许久, 一些小细节都是解决平时遇到的痛点\
+例如一键粘贴`路径名`, 方便跳转注册表
+
+优化列表还在更新...
 
 ## 测试设备: 
 Surface Laptop 7 U7-268V 32 + 1T\
