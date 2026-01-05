@@ -8,11 +8,11 @@
 	<Application.Resources>
 		<ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <ui:ThemesDictionary Theme="Light" />
                 <ui:ControlsDictionary />
-                
-                <ui:ThemesDictionary Theme="Unknown" />
+                              
             </ResourceDictionary.MergedDictionaries>
-
+       
             <cv:NullToVisibleConverter x:Key="NullToVisibleConverter"/>
             <cv:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
             

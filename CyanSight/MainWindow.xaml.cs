@@ -42,8 +42,8 @@ namespace CyanSight
             double screenHeight = SystemParameters.WorkArea.Height;
 
             // 设置宽度为屏幕的 60%; 高度为 80% 
-            this.Width = screenWidth * 0.6;
-            this.Height = screenHeight * 0.8;
+            this.Width = screenWidth * 0.66;
+            this.Height = screenHeight * 0.75;
 
             // 再次强制居中
             this.WindowStartupLocation = WindowStartupLocation.CenterScreen;

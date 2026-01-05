@@ -120,70 +120,21 @@ Windows 有一种机制叫“焦点窃取保护”。当你在打字时，如果
 		</Item>
 
 		
-	</Configuration>
-		
-		<Configuration category="System">
 
-			<Item name="启用大系统缓存">
-				<Tags>LargeSystemCache,缓存,性能,内存管理</Tags>
 
-				<StatusChecks>
-					<Check
-						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
-						Value="LargeSystemCache"
-						Data="1" />
-				</StatusChecks>
 
-				<Description>
-					<![CDATA[
-# 🧠 启用 LargeSystemCache  (服务器模式)
+		<Item name="增加文件系统 I/O 缓存">
+			<Tags>IoPageLockLimit,IO,缓存,锁定内存</Tags>
 
-告诉 Windows 内存管理器采取 **“服务器模式”**。
+			<StatusChecks>
+				<Check
+					Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+					Value="IoPageLockLimit"
+					Data="10000000" />
+			</StatusChecks>
 
-### 核心机制
-* **默认 (0)**：优先将内存留给**前台应用程序**（如浏览器、游戏）。  
-* **优化 (1)**：优先将内存用于**文件系统缓存**（加速文件读写）。
-
-> **⚠️ 怀旧项警告**：  
-> 对于个人电脑/游戏用途，这通常是**负优化**。因为它会抢占应用程序的物理内存，导致游戏或软件更容易被挤到虚拟内存中，从而变卡。
-* 在 Win10/11 上，系统自身的动态管理已经非常优秀。除非你把电脑当 NAS 用(频繁拷贝大文件)
-
----
-{AutoDetails}
-        ]]>
-				</Description>
-
-				<Optimize>
-					<RegWrite
-						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
-						Value="LargeSystemCache"
-						Type="REG_DWORD"
-						Data="1"/>
-				</Optimize>
-
-				<Restore>
-					<RegWrite
-						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
-						Value="LargeSystemCache"
-						Type="REG_DWORD"
-						Data="0"/>
-				</Restore>
-			</Item>
-
-			
-
-			<Item name="增加文件系统 I/O 缓存">
-				<Tags>IoPageLockLimit,IO,缓存,锁定内存</Tags>
-
-				<StatusChecks>
-					<Check
-						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
-						Value="IoPageLockLimit"
-						Data="10000000" />
-				</StatusChecks>
-
-				<Description>
-					<![CDATA[
+			<Description>
+				<![CDATA[
 # 💾 调整 IoPageLockLimit  
 增加文件管理系统缓存  
 设置系统在进行 I/O 操作时可锁定的最大内存字节数。  
@@ -197,312 +148,149 @@ Windows 有一种机制叫“焦点窃取保护”。当你在打字时，如果
 ---
 {AutoDetails}
         ]]>
-				</Description>
+			</Description>
 
-				<Optimize>
-					<RegWrite
-						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
-						Value="IoPageLockLimit"
-						Type="REG_DWORD"
-						Data="10000000"/>
-				</Optimize>
-
-				<Restore>
-					<RegWrite
-						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
-						Value="IoPageLockLimit"
-						Type="REG_DWORD"
-						Data="0"/>
-				</Restore>
-			</Item>
-
-			<Item name="优化进程数量">
-				<Tags>SvcHostSplitThresholdInKB,进程数,内存,SvcHost</Tags>
-
-				<StatusChecks>
-					<Check
-						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control"
-						Value="SvcHostSplitThresholdInKB"
-						Data="4294967295" />
-				</StatusChecks>
-
-				<Description>
-					<![CDATA[
-# 📉 SvcHost 进程合并
-
-强制合并服务进程，减少 `svchost.exe` 的数量。
-
-* **技术原理**：将“拆分内存阈值”设为 **4TB** (0xFFFFFFFF)。Windows 会误以为内存不足，从而触发旧机制合并进程。
-* **背景**：在 Windows 10 (1703+) 以后，如果你的内存大于 3.5GB，系统会把每个服务拆分成独立的 `svchost.exe` 进程。这样做的好处是**稳定**（一个服务崩了不会带崩其他的），坏处是**进程列表很长**，且每个进程都要占用一点点基础内存。
-* **修改**：将“拆分阈值”设为无限大（4TB）。
-* **结果**：Windows 会认为你的内存“不够大”，从而触发旧机制，将几十个服务**合并**到一个或几个 `svchost.exe` 进程中。
-
-
-* **效果**：任务管理器的进程数会骤减(比如从 150 个变成 80 个), 看起来很清爽, 也能省一点点内存。
-
-* **警告**：这个优化虽然能减少进程数，但如果某个驱动或服务有 Bug，可能会导致整个服务宿主崩溃，引发更严重的系统问题(如音频和网络同时挂掉)
----
-{AutoDetails}
-        ]]>
-				</Description>
-
-				<Optimize>
-					<RegWrite
-						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control"
-						Value="SvcHostSplitThresholdInKB"
-						Type="REG_DWORD"
-						Data="4294967295"/>
-				</Optimize>
-
-				<Restore>
-					<RegDelete
-						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control"
-						Value="SvcHostSplitThresholdInKB"/>
-				</Restore>
-			</Item>
-
-			<Item name="禁用高精度事件定时器">
-				<Tags>hpet,定时器,FPS,微卡顿,Start</Tags>
-
-				<StatusChecks>
-					<Check
-						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\hpet"
-						Value="Start"
-						Data="4" />
-				</StatusChecks>
-
-				<Description>
-					<![CDATA[
-# ⏱️ 禁用 HPET (高精度定时器)
-
-停止 `hpet` 服务并禁用其驱动。
-
-### 作用与争议
-* **目的**：强制系统使用 CPU 自带的 **TSC** 计时器，理论上延迟更低。
-* **副作用**：在现代系统上通常不需要调整。如果强制关闭，可能导致系统时间不同步（如音画不同步）。
-
-> **建议**：仅在旧主板或 BIOS 存在 Bug 导致游戏掉帧时尝试。
-
----
-{AutoDetails}
-        ]]>
-				</Description>
-
-				<Optimize>
-					<RegWrite
-						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\hpet"
-						Value="Start"
-						Type="REG_DWORD"
-						Data="4"/>
-					<Cmd>net stop hpet</Cmd>
-				</Optimize>
-
-				<Restore>
-					<RegWrite
-						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\hpet"
-						Value="Start"
-						Type="REG_DWORD"
-						Data="2"/>
-					<Cmd>net start hpet</Cmd>
-				</Restore>
-			</Item>
-
-			<Item name="关闭乱序内存">
-				<Tags>MitigationOptions,ASLR,乱序内存,安全,漏洞防护</Tags>
-
-				<StatusChecks>
-					<Check
-						Key="HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Session Manager\kernel"
-						Value="MitigationOptions"
-						Data="22,22,22,00,00,02,00,00,00,02,00,00,00,00,00,00" />
-				</StatusChecks>
-
-				<Description>
-					<![CDATA[
-# 🛑 关闭 Exploit Protection (禁用 ASLR)
-
-**警告：极度危险！** 此选项将修改 `MitigationOptions` 以关闭 ASLR（地址空间布局随机化）。
-
-### 为什么不应该使用？
-* **安全风险**：内存地址固定化，相当于把“大门钥匙挂在门把手上”。黑客可以轻松预测关键组件地址进行缓冲区溢出攻击。
-* **性能迷思**：现代 CPU 拥有 MMU 硬件加速，开启 ASLR 的性能损耗几乎为 0。
-
-> **适用场景**：仅限完全断网环境下，运行 2000 年以前依赖固定内存地址的**工业老软件**。
-
----
-{AutoDetails}
-        ]]>
-				</Description>
-
-				<Optimize>
-					<RegWrite
-						Key="HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Session Manager\kernel"
-						Value="MitigationOptions"
-						Type="REG_BINARY"
-						Data="22,22,22,00,00,02,00,00,00,02,00,00,00,00,00,00"/>
-				</Optimize>
-
-				<Restore>
-					<RegDelete
-						Key="HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Session Manager\kernel"
-						Value="MitigationOptions"/>
-				</Restore>
-			</Item>
-
-			<Item name="开启二级缓存">
-				<Tags>SecondLevelDataCache,L2,Cache二级缓存</Tags>
-
-				<StatusChecks>
-					<Check
-						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
-						Value="SecondLevelDataCache"
-						Data="1024" />
-				</StatusChecks>
-
-				<Description>
-					<![CDATA[
-# 开启 CPU 二级缓存
-
-* 现代 CPU 的 L2 缓存是固定的，且 Windows 硬件抽象层(HAL)能自动完美读取。
-* 个人认为没有任何优化作用，反而是在告诉操作系统错误的 CPU 参数。
-* **这是典型的"蛇油"优化, 自行判断**
-
-
-* `SecondLevelDataCache`值为内存的八分之一
-* 十进制，8G内存设为1024，16G设为2048，32G设为4096
-
----
-{AutoDetails}
-        ]]>
-				</Description>
-
-				<Optimize>
-					<RegWrite
-						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
-						Value="SecondLevelDataCache"
-						Type="REG_DWORD"
-						Data="1024 / 2048 / 4096"/>
-				</Optimize>
-
-				<Restore>
-					<RegWrite
-						Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
-						Value="SecondLevelDataCache"
+			<Optimize>
+				<RegWrite
+					Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+					Value="IoPageLockLimit"
 					Type="REG_DWORD"
-						Data="0" />
-				</Restore>
-			</Item>
+					Data="10000000"/>
+			</Optimize>
 
-				<Item name="强制卸载闲置 DLL">
-					<Tags>DLL,内存泄漏,AlwaysUnloadDLL,ShellExtension,资源管理器</Tags>
+			<Restore>
+				<RegWrite
+					Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+					Value="IoPageLockLimit"
+					Type="REG_DWORD"
+					Data="0"/>
+			</Restore>
+		</Item>
 
-					<StatusChecks>
-						<Check
-							Key="HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
-							Value="AlwaysUnloadDLL"
-							Data="1" />
-					</StatusChecks>
+		<Item name="禁用家庭组 (HomeGroup) 残留服务">
+			<Tags>HomeGroup,Legacy,Network,Service,Provider</Tags>
 
-					<Description>
-						<![CDATA[
-# 🧹 强制卸载闲置 DLL
+			<StatusChecks>
+				<Check
+					Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HomeGroupProvider"
+					Value="Start"
+					Data="4" />
+			</StatusChecks>
 
-此选项指示 Windows 资源管理器 (Explorer) 在不再使用动态链接库 (DLL) 时立即将其卸载。
+			<Description>
+				<![CDATA[
+# 🏛️ 禁用家庭组 (历史残留)
 
-### 🔧 技术真相
-* **作用对象**：仅针对 **资源管理器加载的扩展插件**（如右键菜单项、缩略图生成器等），**不影响**其他独立程序。
-* **默认行为**：Windows 会缓存这些 DLL 以便下次快速调用。
-* **开启后**：用完即清理。
+**家庭组 (HomeGroup)** 是 Windows 7 时代的局域网共享功能，微软已在 Windows 10 (1803) 中将其移除。
 
-### ⚖️ 结论
-* 对于 256MB 内存的 Windows 98，这是神技。
-* 对于 16GB+ 内存的 Windows 11，这是负优化（牺牲速度换取微不足道的内存）。
-* 优点: 防止有 Bug 的右键菜单插件长期占用内存（内存泄漏），减少 Explorer.exe 的内存占用。
-
----
-{AutoDetails}
-            ]]>
-					</Description>
-
-					<Optimize>
-						<RegWrite
-							Key="HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
-							Value="AlwaysUnloadDLL"
-							Type="REG_DWORD"
-							Data="1"/>
-					</Optimize>
-
-					<Restore>
-						<RegDelete
-							Key="HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
-							Value="AlwaysUnloadDLL"/>
-					</Restore>
-				</Item>
-
-				<Item name="开启MFT存储空间">
-					<Tags>MFT,NTFS,文件系统,碎片,磁盘性能,NtfsMftZoneReservation</Tags>
-
-					<StatusChecks>
-						<Check
-							Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem"
-							Value="NtfsMftZoneReservation"
-							Data="1" />
-					</StatusChecks>
-
-					<Description>
-						<![CDATA[
-# 💿 MFT 智能空间预留 / 优化 NTFS MFT 预留空间 / 减少文件碎片
-
-* XP/Win7 时代遗留的优化项
-此选项调整 NTFS 主文件表 (MFT) 的保留空间大小，以减少在文件数量巨大时的磁盘碎片。
-
-## 🔧 技术原理
-MFT 是 NTFS 记录所有文件信息的数据库。如果 MFT 空间不足，它会分散存储，导致读取文件变慢。
-* ???????默认值????????
-* **默认值 (1)**：预留卷大小的 12.5%。
-* **优化值 (2)**：预留卷大小的 **25%**。
-* 1、2、3、4分别为小的、中型的、较大的、最大的MFT保留空间。
-
-## 场景
-如果你硬盘`1T`, 值设为 `4`，  
-相当于告诉系统把这 1TB 里的 500GB 划为 MFT 专用保留区
-
-虽然当磁盘写满时，Windows 会征用这块保留区存普通文件，
-但这会加剧 MFT 的碎片化(普通文件混进来了)，违背了优化的初衷。
-
-对于 SSD 的极强随机读写性能，MFT 碎片化对性能的影响远不如机械硬盘时代那么致命。
-
-* 对于普通用户：默认的 12.5% (1TB 预留 125GB)存放索引已经绰绰有余，  
-* 除非你有数百万个几 KB 的小文件（比如自建了缓存服务器）。
-
-### 💡 建议
-* **推荐开启**：如果你是开发者(大量 Git 源码)、设计师(大量素材图片)或硬盘文件数量超过几十万个。
-* **无需开启**：如果这台电脑主要用于游戏或看剧(大文件居多)，默认的 12.5% 已足够。
-
-> **注意**：原网传教程建议设为 `4` (50%)，这在现代大容量硬盘上是极度浪费且不必要的，本工具采用更安全的 `2` (25%)。
+### 为什么还要优化它？
+虽然功能入口没了，但在部分老旧系统或升级上来的系统中，底层的 `HomeGroupProvider` 服务尸体可能依然存在。
+* **强迫症福音**：彻底禁用这个早已死去的服务，让服务列表更干净。
+* **心理舒适**：看着全绿的优化列表，心情会变好。
 
 ---
 {AutoDetails}
             ]]>
-					</Description>
+			</Description>
 
-					<Optimize>
-						<RegWrite
-							Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem"
-							Value="NtfsMftZoneReservation"
-							Type="REG_DWORD"
-							Data="1"/>
-					</Optimize>
+			<Optimize>
+				<RegWrite Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HomeGroupProvider" Value="Start" Type="REG_DWORD" Data="4"/>
+			</Optimize>
 
-					<Restore>
-						<RegWrite
-							Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem"
-							Value="NtfsMftZoneReservation"
-							Type="REG_DWORD"
-							Data="0"/>
-					</Restore>
-				</Item>
+			<Restore>
+				<RegWrite Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HomeGroupProvider" Value="Start" Type="REG_DWORD" Data="3"/>
+			</Restore>
+		</Item>
 
+
+		<Item name="隐藏 Edge“操作系统不再受支持”的警告条">
+			<Tags>Edge,Warning,Legacy,OS,SuppressUnsupportedOSWarning</Tags>
+
+			<StatusChecks>
+				<Check
+					Key="HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge"
+					Value="SuppressUnsupportedOSWarning"
+					Data="1" />
+			</StatusChecks>
+
+			<Description>
+				<![CDATA[
+# 🔕 屏蔽旧系统警告横幅
+
+禁止 Edge 在 Windows 7/8/8.1 等旧版操作系统上显示“不再支持此 OS”的顶部横幅。
+
+### 适用场景
+* **虚拟机/老机型**：如果你在虚拟机中运行旧版 Windows 用于测试，开启此项可移除浏览器顶部的永久警告条。
+* **现代系统**：对于 Windows 10/11 用户，此选项**没有可见效果**，但开启它无副作用。
+
+---
+{AutoDetails}
+            ]]>
+			</Description>
+
+			<Optimize>
+				<RegWrite Key="HKEY_CURRENT_USER\Software\Policies\Microsoft\Edge" Value="SuppressUnsupportedOSWarning" Type="REG_DWORD" Data="1"/>
+				<RegWrite Key="HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge" Value="SuppressUnsupportedOSWarning" Type="REG_DWORD" Data="1"/>
+				<RegWrite Key="HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge" Value="SuppressUnsupportedOSWarning" Type="REG_DWORD" Data="1" Wow64="True"/>
+			</Optimize>
+
+			<Restore>
+				<RegDelete Key="HKEY_CURRENT_USER\Software\Policies\Microsoft\Edge" Value="SuppressUnsupportedOSWarning"/>
+				<RegDelete Key="HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge" Value="SuppressUnsupportedOSWarning"/>
+				<RegDelete Key="HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge" Value="SuppressUnsupportedOSWarning" Wow64="True" SkipError="2"/>
+			</Restore>
+		</Item>
+
+		<Item name="启用大系统缓存">
+			<Tags>LargeSystemCache,缓存,性能,内存管理</Tags>
+
+			<StatusChecks>
+				<Check
+					Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+					Value="LargeSystemCache"
+					Data="0" />
+			</StatusChecks>
+
+			<Description>
+				<![CDATA[
+# 🧠 启用 LargeSystemCache
+
+启用"大型系统缓存"
+
+* 0 禁用
+* 1 启用
+
+### 核心机制
+* 0 禁用，适用于需要更多内存供其他应用程序使用的桌面或个人电脑。
+* 1 启用, 适用于高内存的服务器，能提高文件系统的缓存效率，提升磁盘 I/O 性能。
+
+> **⚠️ 怀旧项警告**：  
+> 对于个人电脑/游戏用途，这通常是**负优化**。因为它会抢占应用程序的物理内存，导致游戏或软件更容易被挤到虚拟内存中，从而变卡。
+* 在 Win10/11 上，系统自身的动态管理已经非常优秀。除非你把电脑当 NAS 用(频繁拷贝大文件)
+* 针对早期的WIN XP/Server 2003的选项，在WIN10/11版本这一属性已经被弃用。
+这个选项开不开不会有对你的电脑不会任何影响。
+---
+{AutoDetails}
+        ]]>
+			</Description>
+
+			<Optimize>
+				<RegWrite
+					Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+					Value="LargeSystemCache"
+					Type="REG_DWORD"
+					Data="0"/>
+			</Optimize>
+
+			<Restore>
+				<RegWrite
+					Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+					Value="LargeSystemCache"
+					Type="REG_DWORD"
+					Data="1"/>
+			</Restore>
+		</Item>
+		
 		</Configuration>
 </CyanSight>
 

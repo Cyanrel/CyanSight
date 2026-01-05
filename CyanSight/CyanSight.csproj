@@ -9,28 +9,34 @@
 <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
 		<SupportedOSPlatform>windows10.0.19041.0</SupportedOSPlatform>
 
-	
+
+	<SatelliteResourceLanguages>zh-Hans;en-US</SatelliteResourceLanguages>
 	<Nullable>enable</Nullable>
 	<ImplicitUsings>enable</ImplicitUsings>
 	<UseWPF>true</UseWPF>
 	<ApplicationManifest>app.manifest</ApplicationManifest>
 
-	<Version>1.1.0</Version>
-	<FileVersion>1.1.0.0</FileVersion>
-	<AssemblyVersion>1.1.0.0</AssemblyVersion>
+	<Version>1.2.0</Version>
+	<FileVersion>1.2.0.0</FileVersion>
+	<AssemblyVersion>1.2.0.0</AssemblyVersion>
 
 	<Authors>Cyanrel</Authors>
-	<Company>CyanSight</Company>
+	<Company>Cyanrel</Company>
 	<Description>一个优雅, 现代化的 Windows 系统优化工具。</Description>
 	<Copyright>Copyright © 2024-2026</Copyright>
 	
 	<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 	<PublishSingleFile>true</PublishSingleFile>
-	<SelfContained>true</SelfContained>
+	<PublishTrimmed>false</PublishTrimmed>
+	
+	<SelfContained>false</SelfContained>
+	<Configuration>Release</Configuration>
+	
 	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 	<DebugType>embedded</DebugType>
 	<ApplicationIcon>Assets\app.ico</ApplicationIcon>
 	<SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+	<Platforms>AnyCPU;x64</Platforms>
 </PropertyGroup>
 	
 <PropertyGroup Condition="'$(Configuration)' == 'Release'">

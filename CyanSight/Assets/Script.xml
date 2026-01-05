@@ -3,7 +3,7 @@
 	<Configurations>
 		<Configuration category="System">
 
-			<Item name="管理休眠功能 (Hibernate)">
+			<Item name="快速启动">
 				<Tags>powercfg,快速启动,休眠,Hiberboot</Tags>
 
 				<Description>
@@ -26,6 +26,25 @@
 				</Restore>
 			</Item>
 
+			<Item name="禁用SMB v1">
+				<Tags>SMB,SMB1Protocol</Tags>
+
+				<Description>
+					<![CDATA[
+相当于去`启用或关闭 Windows 功能`把`SMB 1.0/CIFS 文件共享支持`勾选去掉
+
+检测 `Get-SmbServerConfiguration | Select EnableSMB1Protocol`
+        ]]>
+				</Description>
+
+				<Optimize>
+					<Cmd type="ps"><![CDATA[Set-SmbServerConfiguration -EnableSMB1Protocol $false]]></Cmd>
+				</Optimize>
+
+				<Restore>
+					<Cmd type="ps"><![CDATA[Set-SmbServerConfiguration -EnableSMB1Protocol $true]]></Cmd>
+				</Restore>
+			</Item>
 		</Configuration>
 
 		<Configuration category="Bloatware">
@@ -41,6 +60,110 @@
 					<Cmd type="ps"><![CDATA[echo "请去 Microsoft Store 重新下载 Xbox Game Bar"]]></Cmd>
 				</Restore>
 			</Item>
+
+			<Item name="删除Edge浏览器游戏助手">
+				<Tags>Edge,Game,Gaming</Tags>
+				<Description><![CDATA[Edge浏览器默认有可能会装上游戏助手，在后台占用内存，可以通过下面命令进行删除]]></Description>
+
+				<Optimize>
+					<Cmd type="ps"><![CDATA[Get-AppxPackage -All *edge.gameassist* |Remove-AppxPackage]]></Cmd>
+				</Optimize>
+
+				<Restore>
+					<Cmd type="ps"><![CDATA[无]]></Cmd>
+				</Restore>
+			</Item>
+
+
+			<Item name="查看 MBEC 可用的安全特性">
+				<Tags>Edge,Game,Gaming</Tags>
+				<Description><![CDATA[Edge浏览器默认有可能会装上游戏助手，在后台占用内存，可以通过下面命令进行删除]]></Description>
+
+				<Optimize>
+					<Cmd type="ps"><![CDATA[Get-CimInstance –ClassName Win32_DeviceGuard –Namespace root\Microsoft\Windows\DeviceGuard]]></Cmd>
+				</Optimize>
+
+				<Restore>
+					<Cmd type="ps"><![CDATA[无]]></Cmd>
+				</Restore>
+			</Item>
+
+			<Item name="检查内存压缩状态">
+				<Tags>Edge,Game,Gaming</Tags>
+				<Description>
+					<![CDATA[
+					# Windows 8 引入的现代内存管理指令，
+
+## `Disable-MMAgent -ApplicationPreLaunch` (禁用预启动)
+
+* **原理**：禁止 Windows 偷偷在后台预先加载 Edge 浏览器、相册等 UWP 应用。
+* **结论**：**推荐禁用**。虽然首次打开这些应用会慢 0.1 秒，但系统会更纯净。
+
+## `Disable-MMAgent -PageCombining` (禁用页面合并)
+
+* **原理**：系统会扫描内存中相同的内容并合并，以节省空间。这同样需要 CPU 算力。
+* **结论**：**推荐禁用**。同样是为了用“空间换时间”，提高响应速度。
+
+## `Disable-MMAgent -MemoryCompression` (禁用内存压缩)
+
+* **原理**：Win10 默认会将长期不用的内存数据“压缩”起来存在内存里（任务管理器里看到的 `System (Compressed)`），以节省空间，但这会消耗 CPU 资源进行解压/压缩。
+* **你的情况**：既然你有 32GB 内存，空间完全够用，**不需要为了省空间而牺牲 CPU 性能**。
+* **结论**：**推荐禁用**。这能释放 CPU 算力，减少系统微卡顿。
+
+OperationAPI 和 MaxOperationAPIFiles
+这两个是配套的，属于 “操作记录器 (Operation Recorder)” 机制。
+
+OperationAPI (操作 API)
+Windows 的一个底层记录机制。当它为 True 时，系统会“监听”并记录应用程序启动时请求了哪些文件、读取了哪些数据块。
+干什么用：它收集的数据是给 Superfetch (SysMain) 喂食的。Superfetch 分析这些记录，预测你下次要用什么文件，并在后台把它们提前加载到内存中。
+你的状态 (False)：你已经关闭了它。这意味着系统不再记录你的软件启动行为，Superfetch 失去了数据来源（即使 Superfetch 服务开着，它也是瞎子）。这对 SSD 来说没问题，能减少微量的 CPU 占用。
+MaxOperationAPIFiles (最大操作 API 文件数)
+一个配置阈值。它规定了系统在记录某个时间段的操作时，最多允许记录多少个不同的文件。
+为什么是 512：这是系统的默认上限。即便你把 OperationAPI 关了 (False)，这个数字依然停留在配置文件里，只是不再起作用而已。就像你把水龙头的总阀关了，水管的直径依然是 512 毫米，但并没有水流过。
+2. PageCombining (页面合并)
+Windows 的 内存去重 (Memory Deduplication) 技术。
+工作原理：
+
+系统会扫描内存 (RAM)，寻找内容完全相同的页面（比如两个不同的 Chrome 进程可能都加载了同一个 .dll 里的同一段代码，或者存了同样的字符串）。
+如果发现相同的，系统就把它们合并成物理内存中的同一份，然后让两个进程都指向这一个地址。
+如果其中一个进程要修改数据，系统再临时复制一份出来（写时复制，Copy-on-Write）。
+
+利：能节省物理内存，让小内存机器跑更多程序。
+弊：扫描内存需要消耗 CPU；当进程要修改数据时，触发“写时复制”会产生微小的 CPU 延迟（Latency）。
+你的状态 (False)：非常好。对于 8GB 或 16GB 以上内存、且追求游戏响应速度的电脑，关闭它可以避免 CPU 在后台瞎忙活，减少微卡顿。
+
+## PSComputerName 
+针对远程管理的,不显示正常, 一般啥没用
+
+
+]]></Description>
+
+				<Optimize>
+					<Cmd type="ps"><![CDATA[Get-MMAgent]]></Cmd>
+				</Optimize>
+
+				<Restore>
+					<Cmd type="ps"><![CDATA[无]]></Cmd>
+				</Restore>
+			</Item>
+
+			<Item name="查看swap">
+				<Tags>swap,虚拟内存</Tags>
+				<Description>
+					<![CDATA[
+					查看虚拟内存
+				urrentUsage 和 PeakUsage 分别表示当前和历史最高的虚拟内存使用量。
+				]]></Description>
+
+				<Optimize>
+					<Cmd type="ps"><![CDATA[Get-CimInstance -ClassName Win32_PageFileUsage | Select-Object *]]></Cmd>
+				</Optimize>
+
+				<Restore>
+					<Cmd type="ps"><![CDATA[无]]></Cmd>
+				</Restore>
+			</Item>
+
 		</Configuration>
 	</Configurations>
 </CyanSight>

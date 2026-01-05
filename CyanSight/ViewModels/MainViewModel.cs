@@ -249,34 +249,7 @@ namespace CyanSight.ViewModels
                             {
                                 item.Description = GenerateAutoDescription(item);
                             }
-
-                            // ... 后续代码 (构建索引等) ...
-                            //// 处理描述文案
-                            //string? customDesc = element.Element("Description")?.Value;
-                            //if (!string.IsNullOrEmpty(customDesc))
-                            //{
-                            //    // 统一换行符，防止 \r\n 造成干扰
-                            //    customDesc = customDesc.Replace("\r\n", "\n").Replace("\r", "\n");
-
-                            //    // 按行分割，但【保留空行】(去掉 StringSplitOptions.RemoveEmptyEntries)
-                            //    var lines = customDesc.Split('\n');
-
-                            //    // 只去除每行前面的缩进空格 (TrimStart)，保留行尾空格 (Markdown换行需要行尾空格)
-                            //    var cleanLines = lines.Select(line => line.TrimStart());
-
-                            //    // 重新组合
-                            //    customDesc = string.Join("\n", cleanLines);
-
-                            //    if (customDesc.Contains("{AutoDetails}"))
-                            //        item.Description = customDesc.Replace("{AutoDetails}", GenerateTechDetails(item));
-                            //    else
-                            //        item.Description = customDesc;
-                            //}
-                            //else
-                            //{
-                            //    item.Description = GenerateAutoDescription(item);
-                            //}
-
+                     
                             // 构建搜索索引
                             item.BuildSearchIndex();
 
@@ -564,6 +537,11 @@ namespace CyanSight.ViewModels
                 "system" => "\uE770",   // ⚙️ CPU/系统芯片
                 "network" => "\uE774",  // 🌐 [新增] 网络/地球仪图标
                 "privacy" => "\uE72E",  // 🔒 隐私/锁
+                "edge" => "\uF61A", // 🌍 Edge 浏览器 Logo 
+                "danger" => "\uE7BA", // ⚠️ 警告/高风险 (Warning)
+                "power" => "\uE7E8", // ⏨ PowerButton (电源/开关)
+                "silent" => "\uEA8F", // 🔕 RingerOff (禁止响铃/静音)
+                "drive" => "\uEDA2",
                 _ => "\uE9D9"           // 🛠️ 默认/工具箱
             };
         }
@@ -782,19 +760,63 @@ namespace CyanSight.ViewModels
                         shouldSelect = false; // 保持全不选
                         break;
 
-                    case "surfacego2": // 场景：通用/办公笔记本
+                    case "surfacego2": 
                         presetNameCN = "Surface Go 2";
                       
                         var surfacego2List = new HashSet<string>
                         {
-                            "禁用处理器的幽灵和熔断补丁",
-                            "禁用SysMain与预读取",
-                            "关闭快速启动",
-                            "弹出U盘后彻底断开其电源",
-                            "关闭系统自动调试功能",
+                             "关闭快速启动",
+                             "禁用SysMain与预读取",
+                             "取消8.3短文件名",
+                             "禁止更新文件最后访问时间",
+                             "禁用 NTFS 链接跟踪",
+                             "弹出U盘后彻底断开其电源",
+                             "禁用软盘服务",
+                             "禁用游戏录制",
+                             "消除启动延迟机制",
                             "消除登录脚本延迟",
-                            "启用更新重启后自动登录",
-                            "禁用软盘服务"                           
+                            "优化文件列表刷新策略",
+                            "禁用快捷方式自动追踪",
+"禁用「开始」菜单中的建议",
+"禁用锁屏Windows聚焦",
+"隐藏桌面了解此图片图标",
+"禁止自动静默安装推荐的应用程序",
+"禁止应用商店自动下载和安装更新",
+"启用更新重启后自动登录",
+"关闭系统自动调试功能",
+"禁用计划诊断维护",
+"禁用程序兼容性助手",
+"禁用Windows错误报告",
+"禁用系统崩溃转储",
+"开启崩溃守护机制",
+"禁用启动日志报告",
+"禁用网络诊断日志",
+"关闭应用商店推广",
+"禁用商店关联查找",
+"关闭[获取技巧和建议]",
+"禁止加入客户体验改善计划",
+"禁用[建议]与横幅",
+"移除开始菜单中的网络搜索",
+"禁用搜索框[热门搜索]",
+"禁用Cortana与云端搜索遥测",
+"重置并禁用广告 ID",
+"禁用系统级网页预读取与预测",
+"屏蔽 Edge 首次欢迎页",
+"禁止 Edge 关闭后继续运行后台应用",
+"禁用 Edge 启动增强",
+"禁用 Edge 侧边栏",
+"禁止 Edge 发送可选诊断数据",
+"禁用 Edge 标签页性能检测器",
+"隐藏 Edge 快捷图标",
+"隐藏 Edge 资讯与内容",
+"禁用 Edge 每日壁纸",
+"禁止 Edge 个性化广告与体验报告",
+"阻止Edge中搜索的广告结果",
+"禁用 Edge 不安全下载拦截",
+"Disabled Spectre and Meltdown",
+"Disabled HVCI",
+"Disabled VBS",
+
                         };
 
                         if (surfacego2List.Contains(item.Title)) shouldSelect = true;

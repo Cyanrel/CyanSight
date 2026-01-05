@@ -29,7 +29,9 @@
         <Style x:Key="FeatureListViewStyle" TargetType="ListView">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" 
+                    Value="Disabled"/>
+            <Setter Property="ScrollViewer.CanContentScroll" Value="False"/>
             <Setter Property="Margin" Value="{StaticResource TabContentMargin}"/>
         </Style>
 
@@ -45,32 +47,32 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">
                         <Border x:Name="Border" 
-                                Background="{TemplateBinding Background}" 
-                                CornerRadius="6" 
-                                Margin="0" 
-                                SnapsToDevicePixels="True">
+                        Background="{TemplateBinding Background}" 
+                        CornerRadius="6" 
+                        Margin="0" 
+                        SnapsToDevicePixels="True">
                             <ContentPresenter x:Name="ContentSite"
-                                                VerticalAlignment="Center"
-                                                HorizontalAlignment="Center"
-                                                ContentSource="Header"
-                                                Margin="{TemplateBinding Padding}"/> 
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Center"
+                                        ContentSource="Header"
+                                        Margin="{TemplateBinding Padding}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" 
-                                     Value="True">
+                             Value="True">
                                 <Setter TargetName="Border" 
-                                        Property="Background" 
-                                        Value="{DynamicResource ControlFillColorDefaultBrush}"/>
+                                Property="Background" 
+                                Value="{DynamicResource ControlFillColorDefaultBrush}"/>
                                 <Setter Property="Foreground" 
-                                        Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                Value="{DynamicResource TextFillColorPrimaryBrush}"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" 
-                                     Value="True">
+                             Value="True">
                                 <Setter TargetName="Border" 
-                                        Property="Background" 
-                                        Value="{DynamicResource SubtleFillColorSecondaryBrush}"/>  
+                                Property="Background" 
+                                Value="{DynamicResource SubtleFillColorSecondaryBrush}"/>
                                 <Setter Property="Foreground" 
-                                        Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                Value="{DynamicResource TextFillColorPrimaryBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -83,6 +85,66 @@
                     </DataTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <Style x:Key="CodeCopyButtonStyle" TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+            <Setter Property="Appearance" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="6"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ui:Button">
+                        <Border x:Name="Border" 
+                    Background="Transparent" 
+                    CornerRadius="{TemplateBinding CornerRadius}"
+                    SnapsToDevicePixels="True">
+                            <ContentPresenter VerticalAlignment="Center" 
+                                  HorizontalAlignment="Center"
+                                  Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="Background" 
+                            Value="{DynamicResource SubtleFillColorSecondaryBrush}"/>
+                            </Trigger>
+
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Border" Property="Background" 
+                            Value="{DynamicResource SolidBackgroundFillColorBaseBrush}"/>
+                                <Setter Property="Foreground" 
+                            Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CleanSearchBoxStyle" TargetType="ui:TextBox" BasedOn="{StaticResource {x:Type ui:TextBox}}">
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorTertiaryBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Margin" Value="0,0,12,12"/>
+            <Style.Resources>
+                <SolidColorBrush x:Key="TextControlElevationBorderBrush" Color="Transparent"/>
+                <SolidColorBrush x:Key="TextControlElevationBorderFocusedBrush" Color="Transparent"/>
+            </Style.Resources>
+        </Style>
+
+        <Style x:Key="PreviewTextStyle" TargetType="TextBox">
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="FontFamily" Value="Consolas, Courier New, Monospace"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,12,48,12"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         </Style>
     </Window.Resources>
 
@@ -110,8 +172,8 @@
                 <ui:TextBox Grid.Row="0" 
                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                             PlaceholderText="搜索优化项..." 
-                            Icon="{ui:SymbolIcon Search24}" 
-                            Margin="0,0,12,12"/>
+                            Icon="{ui:SymbolIcon Search24}"
+                            Style="{StaticResource CleanSearchBoxStyle}"/>                 
 
                 <TabControl Grid.Row="1" 
                             Background="Transparent" 
@@ -127,9 +189,15 @@
 
                     <TabItem Header="🚀 优化 " Style="{StaticResource FluentTabItemStyle}">
                         <ListView ItemsSource="{Binding CoreItems}"
-                  SelectedItem="{Binding SelectedItem}"
-                  Style="{StaticResource FeatureListViewStyle}">
+                                  SelectedItem="{Binding SelectedItem}"
+                                  Style="{StaticResource FeatureListViewStyle}">
 
+                            <ListView.Resources>
+                                <Style TargetType="ScrollViewer" BasedOn="{StaticResource {x:Type ScrollViewer}}">
+                                    <Setter Property="services:ScrollHelper.SpeedMultiplier" Value="0.3"/>
+                                </Style>
+                            </ListView.Resources>
+                            
                             <ListView.Margin>-5,16,0,0</ListView.Margin>
 
                             <ListView.ItemTemplate>
@@ -169,6 +237,13 @@
                         <ListView ItemsSource="{Binding LegacyItems}"
                   SelectedItem="{Binding SelectedItem}"
                   Style="{StaticResource FeatureListViewStyle}">
+
+                            <ListView.Resources>
+                                <Style TargetType="ScrollViewer" BasedOn="{StaticResource {x:Type ScrollViewer}}">
+                                    <Setter Property="services:ScrollHelper.SpeedMultiplier" Value="0.3"/>
+                                </Style>
+                            </ListView.Resources>
+                            
                             <ListView.ItemTemplate>
                                 <DataTemplate>
                                     <Grid Margin="0,6" Opacity="0.8">
@@ -202,6 +277,13 @@
                         <ListView ItemsSource="{Binding ScriptItems}"
                   SelectedItem="{Binding SelectedItem}"
                   Style="{StaticResource FeatureListViewStyle}">
+
+                            <ListView.Resources>
+                                <Style TargetType="ScrollViewer" BasedOn="{StaticResource {x:Type ScrollViewer}}">
+                                    <Setter Property="services:ScrollHelper.SpeedMultiplier" Value="0.3"/>
+                                </Style>
+                            </ListView.Resources>
+                            
                             <ListView.ItemTemplate>
                                 <DataTemplate>
                                     <Grid Margin="0,6">
@@ -246,13 +328,17 @@
                      Background="Transparent"
                      BorderThickness="0">
                 <ScrollViewer Visibility="{Binding SelectedItem, Converter={StaticResource NullToCollapsedConverter}}"
-              VerticalScrollBarVisibility="Auto"
-              HorizontalScrollBarVisibility="Disabled"
-              Padding="0,0,12,0">
+                            VerticalScrollBarVisibility="Auto"
+                            HorizontalScrollBarVisibility="Disabled"
+                            CanContentScroll="False"
+                            services:ScrollHelper.SpeedMultiplier="0.3"
+                            Padding="0,0,12,0">   
                     <StackPanel Margin="32,24,20,32">
                         <TextBlock Text="{Binding SelectedItem.Title}" 
-                   FontSize="28" FontWeight="SemiBold" TextWrapping="Wrap"
-                   Margin="0,0,0,16"/>
+                                   FontSize="28" 
+                                   FontWeight="SemiBold" 
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,16"/>
 
                         <ui:ToggleSwitch IsChecked="{Binding SelectedItem.IsSelected, Mode=TwoWay}" 
                          IsEnabled="{Binding SelectedItem.IsEnabled}" 
@@ -288,31 +374,23 @@
                                     </Style.Triggers>
                                 </Style>
                             </StackPanel.Style>
-                            <TextBlock Text="执行命令预览" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12" Margin="0,0,0,8"/>
-                            <Border Background="{DynamicResource ControlFillColorSecondaryBrush}" 
+                            <TextBlock Text="执行命令预览" 
+                                       Foreground="{DynamicResource TextFillColorTertiaryBrush}" 
+                                       FontSize="12" 
+                                       Margin="0,0,0,8"/>
+                            <Border Background="{DynamicResource ControlFillColorTertiaryBrush}" 
                                     BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}" 
                                     BorderThickness="1" 
                                     CornerRadius="6">
                                 <Grid>
                                     <TextBox Text="{Binding SelectedItem.OptimizeCommands[0].Data, Mode=OneWay}" IsReadOnly="True" FontFamily="Consolas, Courier New, Monospace" 
-                                             FontSize="13" 
-                                             Background="Transparent" 
-                                             BorderThickness="0" 
-                                             Padding="16,12,48,12" 
-                                             TextWrapping="Wrap" 
-                                             TextAlignment="Left"
-                                             VerticalContentAlignment="Center" 
-                                             Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                             Style="{StaticResource PreviewTextStyle}"/>
                                     <ui:Button Command="{Binding CopyScriptCommand}" 
                                                ToolTipService.ToolTip="复制命令" 
-                                               HorizontalAlignment="Right" 
-                                               VerticalAlignment="Top" 
-                                               Margin="4" Padding="6" 
-                                               Appearance="Transparent" 
-                                               BorderThickness="0">
+                                               Style="{StaticResource CodeCopyButtonStyle}">
                                         <ui:SymbolIcon Symbol="Copy24" 
                                                        FontSize="16" 
-                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"/> 
                                     </ui:Button>
                                 </Grid>
                             </Border>
@@ -360,35 +438,20 @@
                             </StackPanel.Style>
 
                             <TextBlock Text="📂 目标位置 (Registry Key)" 
-                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
-                       FontSize="12" Margin="0,0,0,8"/>
+                                       Foreground="{DynamicResource TextFillColorTertiaryBrush}" 
+                                       FontSize="12" Margin="0,0,0,8"/>
 
-                            <Border Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                    BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}"
-                    BorderThickness="1"
-                    CornerRadius="6">
+                            <Border Background="{DynamicResource ControlFillColorTertiaryBrush}"
+                                                 BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}"
+                                                 BorderThickness="1"
+                                                 CornerRadius="6">   
                                 <Grid>
                                     <TextBox Text="{Binding SelectedItem.OptimizeCommands[0].FullKeyPath, Mode=OneWay}"
-                             IsReadOnly="True"
-                             FontFamily="Consolas, Courier New, Monospace"
-                             FontSize="13"
-                             Background="Transparent"
-                             BorderThickness="0"
-                             Padding="16,12,48,12" 
-                             TextWrapping="Wrap"
-                                             TextAlignment="Left"
-                                  
-                             VerticalContentAlignment="Center"
-                             Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                             Style="{StaticResource PreviewTextStyle}"/>
 
                                     <ui:Button Command="{Binding CopyRegKeyCommand}"
-                               ToolTipService.ToolTip="复制路径"
-                               HorizontalAlignment="Right"
-                               VerticalAlignment="Top"
-                               Margin="4"
-                               Padding="6"
-                               Appearance="Transparent"
-                               BorderThickness="0">
+                                               ToolTipService.ToolTip="复制路径"
+                                               Style="{StaticResource CodeCopyButtonStyle}">    
                                         <ui:SymbolIcon Symbol="Copy24" FontSize="16" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                     </ui:Button>
                                 </Grid>
@@ -396,9 +459,9 @@
                         </StackPanel>
 
                         <Rectangle Height="1" 
-           Fill="{DynamicResource SurfaceStrokeColorDefaultBrush}" 
-           Margin="0,0,0,24" 
-           Opacity="0.6"/>
+                                   Fill="{DynamicResource SurfaceStrokeColorDefaultBrush}" 
+                                   Margin="0,0,0,24" 
+                                   Opacity="0.6"/>  
 
                         <md:MarkdownScrollViewer Markdown="{Binding SelectedItem.TechDetails}" 
                                                  services:ScrollFix.FixMouseWheel="True"
