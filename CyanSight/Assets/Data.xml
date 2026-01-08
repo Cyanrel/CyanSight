@@ -289,7 +289,7 @@ MFT 是 NTFS 记录所有文件信息的数据库。如果 MFT 空间不足，�
 				<Check
 					Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem"
 					Value="NtfsDisable8dot3NameCreation"
-					Data="2" />
+					Data="1" />
 			</StatusChecks>
 
 			<Description>
@@ -324,7 +324,7 @@ MFT 是 NTFS 记录所有文件信息的数据库。如果 MFT 空间不足，�
 					Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem"
 					Value="NtfsDisable8dot3NameCreation"
 					Type="REG_DWORD"
-					Data="2"/>
+					Data="0"/>
 			</Restore>
 		</Item>
 
@@ -375,42 +375,6 @@ MFT 是 NTFS 记录所有文件信息的数据库。如果 MFT 空间不足，�
 					Value="NtfsDisableLastAccessUpdate"
 					Type="REG_DWORD"
 					Data="2147483650"/>
-			</Restore>
-		</Item>
-
-		<Item name="禁用 NTFS 链接跟踪">
-			<Tags>Service,NTFS,Network,TrkWks,Performance</Tags>
-
-			<StatusChecks>
-				<Check
-					Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\TrkWks"
-					Value="Start"
-					Data="4" />
-			</StatusChecks>
-
-			<Description>
-				<![CDATA[
-# 禁用 NTFS 链接跟踪 (TrkWks)
-
-关闭 Distributed Link Tracking Client 服务。
-
-### 作用
-* TrkWks 服务用于在局域网内的不同计算机之间跟踪文件移动
-* 举例: 你在A电脑把文件移到了B电脑，A电脑上的快捷方式自动更新指向
-* 关闭后可减少后台不必要的轮询服务，微量提升系统响应。
-
-对于个人电脑, 这纯粹的资源浪费。
----
-{AutoDetails}
-            ]]>
-			</Description>
-
-			<Optimize>
-				<RegWrite Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\TrkWks" Value="Start" Type="REG_DWORD" Data="4"/>
-			</Optimize>
-
-			<Restore>
-				<RegWrite Key="HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\TrkWks" Value="Start" Type="REG_DWORD" Data="2"/>
 			</Restore>
 		</Item>
 
@@ -1051,17 +1015,18 @@ Windows 为了让桌面（Shell）先加载完毕流畅显示，通常会故意�
 			</StatusChecks>
 			<Description>
 				<![CDATA[
-# 🔄 启用更新重启后自动登录
+# 启用更新重启后自动登录
 
-### ⚙️ 原理
-这是 Windows 的“更新后自动登录”功能 (ARSO)。
+### 原理
+开启 Windows 的“更新后自动登录”功能 (ARSO)  
+当 Windows Update 安装补丁需要重启时，系统会临时保存你的登录令牌。  
+* 它会自动登录你的账户，并在锁屏界面后台默默完成最后的安装步骤。  
 
-### 🚀 开启后的效果
-当 Windows Update 安装补丁需要重启时，系统会临时保存你的登录令牌。
-* **重启后**：它会自动登录你的账户，并在锁屏界面后台默默完成最后的安装步骤。
-* **体验**：当你早上打开电脑时，更新已经全部装好了，不用等你输完密码再转圈圈等待安装。
+### 效果
 
-### 🌟 建议
+* 当你早上打开电脑时，更新已经全部装好了，不用等你输完密码再转圈圈等待安装。
+
+### 建议
 * **推荐开启**：这就是 Win10/11 的默认行为，能显著提升更新体验。
 * **注意**：此功能可能会被某些优化工具误关闭，建议确保开启。
 
@@ -1087,16 +1052,18 @@ Windows 为了让桌面（Shell）先加载完毕流畅显示，通常会故意�
 			</StatusChecks>
 			<Description>
 				<![CDATA[
-# 🚫 关闭系统自动调试功能 (AeDebug)
+# 关闭系统自动调试功能 (AeDebug)
 
-### ⚙️ 原理
-当程序崩溃 (App Crash) 时，Windows 默认会弹出一个对话框：“正在检查解决方案...” 或者询问是否要调试。这个过程通常会卡住几秒钟，且极少能提供实质性的解决方案。
+### 原理
+当程序崩溃 (App Crash) 时，Windows 默认会弹出一个对话框：“正在检查解决方案...” 或者询问是否要调试。\n
+这个过程通常会卡住几秒钟，且极少能提供实质性的解决方案。
 
-### 🚀 优化后效果
+### 效果
 程序崩溃时直接“猝死”并退出，不弹窗，不尝试寻找解决方案。
 
-### 🌟 建议
-* **推荐开启**：对于普通用户，Windows 自带的“寻找解决方案”功能如同虚设。关闭它可以让崩溃的程序迅速结束，方便您立即重启它，避免无意义的等待。
+### 建议
+* **推荐开启**：对于普通用户，Windows 自带的“寻找解决方案”功能如同虚设。\n
+关闭它可以让崩溃的程序迅速结束，方便您立即重启它，避免无意义的等待。
 
 ---
 {AutoDetails}
@@ -1239,17 +1206,19 @@ Windows 为了让桌面（Shell）先加载完毕流畅显示，通常会故意�
 禁止 Windows 在系统崩溃 (蓝屏/BSOD) 时将内存数据写入硬盘。
 
 ### 为什么禁用？
-* **节省空间**：完整的内存转储文件大小通常等于你的物理内存大小（例如 32GB），这会瞬间占用大量 C 盘空间。
-* **保护隐私**：内存转储可能包含崩溃时正在处理的敏感数据。
-* **加速重启**：崩溃后无需等待磁盘写入，直接重启。
+* 内存转储文件会占用你的 C 盘空间。
+* 崩溃后无需等待磁盘写入，直接重启。
 
 > **注意**：禁用后，如果电脑频繁蓝屏，你将无法获取调试文件来分析原因。
 
-收益：如果你的电脑有 32GB 内存，一次完全崩溃转储 (Full Dump) 就会生成一个 32GB 的文件，瞬间吃掉 C 盘空间。即使是 Automatic (7)，也会生成较大的文件。禁用它可以防止 C 盘爆炸。
+如果你的电脑有 32GB 内存，一次完全崩溃转储 (Full Dump) 就会生成一个 32GB 的文件，瞬间吃掉 C 盘空间。\n
+即使是 Automatic (7)，也会生成较大的文件。禁用它可以防止 C 盘爆炸。
 
-代价：当遇到蓝屏死机 (BSOD) 时，你将无法使用工具（如 WinDbg）分析是因为哪个驱动程序导致的。
+代价：
 
-建议：对于普通用户/玩家，关掉没问题（反正蓝屏了也看不懂）；对于极客/开发者，建议保留“小内存转储 (Small Memory Dump, 256KB)”。
+### 建议
+当遇到蓝屏死机 (BSOD) 时，你将无法使用工具（如 WinDbg）分析是因为哪个驱动程序导致的\n
+可以保留“小内存转储 (Small Memory Dump, 256KB)”。
 ---
 {AutoDetails}
             ]]>
@@ -1349,16 +1318,16 @@ Windows 为了让桌面（Shell）先加载完毕流畅显示，通常会故意�
 
 			<Description>
 				<![CDATA[
-# 🚫 禁用 WFP 网络日志
+# 禁用 WFP 网络日志
 
-关闭 Windows Filtering Platform (WFP) 的诊断日志记录 (`wfpdiag.etl`)。
+### 背景
+Windows Filtering Platform (WFP)是防火墙和网络监控的核心。\n
+开启诊断日志记录后，系统会不断向 wfpdiag.etl 文件写入网络事件。
 
-### 核心收益
-* **保护硬盘**：WFP 日志在网络活动频繁时（如下载、联机游戏）会产生大量的小文件写入，禁用它可显著减少 SSD 的写入磨损。
-* **减少卡顿**：避免因日志写入造成的 I/O 占用，提升网络吞吐效率。
-技术背景：WFP (Windows Filtering Platform) 是防火墙和网络监控的核心。开启 CollectNetEvents 后，系统会不断向 wfpdiag.etl 文件写入网络事件。
-
-痛点：在某些网络频繁活动（如 P2P 下载、大量连接的游戏）场景下，这个日志文件会导致持续的磁盘 I/O。对于 SSD 寿命和系统微卡顿有直接影响。
+### 作用
+* WFP 日志在网络活动频繁时会产生大量的小文件写入，禁用它可显著减少 SSD 的写入磨损。
+* 避免因日志写入造成的 I/O 占用，提升网络吞吐效率。
+* 在某些网络频繁活动场景下，这个日志文件会导致持续的磁盘 I/O。对于 SSD 寿命和系统微卡顿有直接影响。
 
 ### 注意
 禁用有可能会影响**近30天数据使用量**统计失效
@@ -1395,7 +1364,7 @@ Windows 为了让桌面（Shell）先加载完毕流畅显示，通常会故意�
 
 禁止 Windows 在系统空闲时自动下载并安装推广应用
 
-* 我喜欢点进去手动更新
+* 我喜欢关闭, 然后点进去手动更新
 
 ---
 {AutoDetails}
@@ -1423,7 +1392,7 @@ Windows 为了让桌面（Shell）先加载完毕流畅显示，通常会故意�
 
 			<Description>
 				<![CDATA[
-# 📂 禁用「在应用商店中查找关联应用」
+# 禁用「在应用商店中查找关联应用」
 
 当你打开一个未知格式的文件时，Windows 默认会弹窗询问是否"在 Microsoft Store 中查找应用"
 
@@ -1458,7 +1427,7 @@ Windows 为了让桌面（Shell）先加载完毕流畅显示，通常会故意�
 				<![CDATA[
 # 关闭系统使用技巧提示
 
-禁止 Windows 弹出“获取技巧、建议和引导”类的通知。
+禁止 Windows 弹出"获取技巧、建议和引导"类的通知。
 
 ### 作用
 * 不再弹出“要不要试试 Edge？”或者“你知道吗...”
@@ -1493,7 +1462,7 @@ Windows 为了让桌面（Shell）先加载完毕流畅显示，通常会故意�
 				<![CDATA[
 # 退出客户体验改善计划(CEIP)
 
-通过组策略禁止 Windows 收集并发送“客户体验改善计划” (CEIP) 数据。
+通过组策略禁止 Windows 收集并发送"客户体验改善计划" (CEIP) 数据。
 
 * 阻止系统在后台悄悄收集你的硬件配置和使用习惯数据。
 
@@ -1528,9 +1497,9 @@ Windows 为了让桌面（Shell）先加载完毕流畅显示，通常会故意�
 一键关闭 Windows 在各个角落的“软广”推送。
 
 ### 覆盖范围
-1.  **设置应用**：移除顶部的“完成设备设置”或 Microsoft 365 推广横幅 (ID: 338393)。
-2.  **欢迎界面**：关闭更新后弹出的全屏“欢迎体验” (ID: 338389)。
-3.  **提示与技巧**：不再弹出“你知道吗？”之类的操作提示 (ID: 338388)。
+1.  移除顶部的"完成设备设置"或 Microsoft 365 推广横幅 (ID: 338393)。
+2.  关闭更新后弹出的全屏“欢迎体验” (ID: 338389)。
+3.  不再弹出“你知道吗？”之类的操作提示 (ID: 338388)。
 
 ---
 {AutoDetails}
@@ -1564,12 +1533,13 @@ Windows 为了让桌面（Shell）先加载完毕流畅显示，通常会故意�
 
 			<Description>
 				<![CDATA[
-# 🔍 纯净版开始菜单搜索
+# 纯净版开始菜单搜索
 
 禁止在 Windows 开始菜单的搜索结果中显示 Bing 网页搜索内容。
 
-* **优化前**：搜个“设置”，右边给你推一堆“如何设置路由器”的网页新闻。
-* **优化后**：搜索结果**仅显示本地文件、应用和设置**。
+### 效果
+* 关闭开始菜单搜索时，右边会给你推一堆网页新闻。
+* 搜索结果**仅显示本地文件、应用和设置**。
 * 本地搜索响应会更快。
 
 ---
@@ -1602,17 +1572,17 @@ Windows 为了让桌面（Shell）先加载完毕流畅显示，通常会故意�
 
 			<Description>
 				<![CDATA[
-# 🧹 净化搜索框体验
+# 净化搜索框体验
 
 禁用任务栏搜索框中的“搜索高亮 (Search Highlights)”以及弹出的“今日热点”信息流。
 
-* **优化前**：搜索框里有节日图标（如南瓜、雪人），点开后显示新闻、股票、必应热搜。
+* **优化前**：搜索框里有节日图标(如南瓜、雪人)，点开后显示新闻、股票、必应热搜。
 * **优化后**：搜索框恢复干净的纯色，点开只显示“最近使用的应用”和“常用文件”
 
 ### 与上面那个区别
-BingSearchEnabled：你点进去搜索时，不显示 Bing 网页结果。
+* (上面那个)BingSearchEnabled：你点进去搜索时，不显示 Bing 网页结果。
 
-DisableSearchBoxSuggestions：还没搜东西时，不显示新闻和热搜。
+* (这个)DisableSearchBoxSuggestions：还没搜东西时，不显示新闻和热搜。
 ---
 {AutoDetails}
             ]]>
@@ -1644,12 +1614,12 @@ DisableSearchBoxSuggestions：还没搜东西时，不显示新闻和热搜。
 
 			<Description>
 				<![CDATA[
-# 🤖 禁用 Cortana 与云搜索
+# 禁用 Cortana 与云搜索
 
 彻底关闭 Cortana (小娜) 的残留策略，并禁止搜索组件使用位置信息和云端索引。
 
-### 为什么需要这个？
-虽然 Cortana 在 Windows 11 已名存实亡，但后台相关的“云搜索”策略 (`AllowCloudSearch`) 仍可能将你的搜索习惯上传到云端以“改善体验”。
+### 原因
+虽然 Cortana 在 Windows 11 已名存实亡，但后台相关的“云搜索”策略 (`AllowCloudSearch`) 仍可能将你的搜索习惯上传到云端以"改善体验"
 * **保护隐私**：切断搜索组件与微软服务器的非必要连接。
 * **减少残留**：确保旧版 AI 助理的策略被彻底禁用。
 
@@ -1688,16 +1658,15 @@ DisableSearchBoxSuggestions：还没搜东西时，不显示新闻和热搜。
 
 			<Description>
 				<![CDATA[
-# 🆔 禁用广告跟踪 ID (Advertising ID)
+# 禁用广告跟踪 ID (Advertising ID)
 
 禁止 Windows 生成唯一的“广告 ID”来跟踪你在不同应用中的活动。
 
 ### 隐私保护
-* **拒绝画像**：阻止微软和第三方应用根据你的使用习惯建立用户画像。
-* **消除定向广告**：关闭后，你看到的广告将不再是“个性化”的（虽然广告数量可能不变，但它们不再知道你是谁）。
+* 阻止微软和第三方应用根据你的使用习惯建立用户画像。
+* 关闭后，你看到的广告将不再是"个性化"的（虽然广告数量可能不变，但它们不再知道你是谁）。
 Windows 会生成一个唯一的 Advertising ID，用于跨应用跟踪你的兴趣并向你推送“个性化广告”。
 
-改进：你的原代码中同时操作了 CurrentVersion (用户层) 和 Policies (策略层)。这是非常地道的做法——双重锁死。
 ---
 {AutoDetails}
             ]]>
@@ -1726,16 +1695,16 @@ Windows 会生成一个唯一的 Advertising ID，用于跨应用跟踪你的兴
 
 			<Description>
 				<![CDATA[
-# 🔮 禁用页面预测
+# 禁用页面预测
 
 禁止 Windows 资源管理器和旧版 Web 组件预测并预加载你可能浏览的网页。
 
 ### 作用
-* **减少隐私泄露**：防止系统将你的浏览模式上传以优化预测算法。
-* **节省流量**：停止后台预加载你可能根本不会去点击的页面资源。
+* 防止系统将你的浏览模式上传以优化预测算法。
+* 停止后台预加载你可能根本不会去点击的页面资源。
 * **注**：此选项主要影响系统遗留组件，不影响现代浏览器的独立设置。  
 
-技术背景：AllowPagePrediction 主要用于控制 IE 和旧版 Windows 组件的预读取行为（即猜测你下一步要点什么，提前加载）。
+技术背景：AllowPagePrediction 主要用于控制 IE 和旧版 Windows 组件的预读取行为(即猜测你下一步要点什么，提前加载)
 
 现状：现代 Edge 有自己的预加载策略。这个注册表键在 Windows 11 中主要影响一些使用旧 Web 引擎的系统组件。
 
@@ -1845,9 +1814,9 @@ Windows 会生成一个唯一的 Advertising ID，用于跨应用跟踪你的兴
 关闭 Edge 浏览器的“性能检测器”功能。
 
 ### 简述
-* Edge有时会弹出“此标签页正在通过睡眠节省资源”或“此标签页占用过高”的建议提示
-* 8GB内存建议开
-* 16GB+的没必要,得禁用
+* Edge有时会弹出"此标签页正在通过睡眠节省资源"或"此标签页占用过高"的建议提示
+* 8GB内存可以开, 防打扰
+* 16GB+的没必要,(因为根本不会弹)
 ---
 {AutoDetails}
             ]]>
@@ -1883,7 +1852,7 @@ Windows 会生成一个唯一的 Advertising ID，用于跨应用跟踪你的兴
 禁止 Microsoft Edge 在更新或重置后弹出"欢迎使用"全屏引导页。
 
 ### 作用
-不让你每次更新都吃一遍OOBE
+不让你每次更新都赤一遍OOBE
 
 ---
 {AutoDetails}
@@ -1951,10 +1920,10 @@ Windows 会生成一个唯一的 Advertising ID，用于跨应用跟踪你的兴
 
 			<Description>
 				<![CDATA[
-# 净化 Edge 新标签页
+# 移除 Edge 新标签页显示的"热门站点"快捷图标
 
 ### 作用
-* 移除 Edge 新标签页中显示的"热门站点"快捷图标。
+* 移除 Edge 新标签页中显示的"热门站点"快捷图标
 * 搜索框下方那一排淘宝、京东、B站的图标
 
 ---
@@ -1989,14 +1958,11 @@ Windows 会生成一个唯一的 Advertising ID，用于跨应用跟踪你的兴
 				<![CDATA[
 # 净化 Edge 新标签页
 
-强制关闭 Edge 新标签页 (New Tab Page)上的微软新闻资讯流、天气和广告内容。
+强制关闭 Edge 新标签页上的微软新闻资讯流、天气和广告内容。
 
-### 优化效果
-* **视觉纯净**：新标签页将只显示搜索框和快捷链接，不再有乱七八糟的新闻八卦。
-
-痛点：Edge 新标签页 (NTP) 默认就是个“MSN 新闻门户”，充满了娱乐八卦和广告。不仅加载慢，而且极其分散注意力。
-
-效果：开启后，只保留 Logo 和搜索框
+### 效果
+* 新标签页将只显示搜索框和快捷链接，不再有乱七八糟的新闻八卦。
+* 开启后，只保留 Logo 和搜索框
 
 ---
 {AutoDetails}
@@ -2017,7 +1983,7 @@ Windows 会生成一个唯一的 Advertising ID，用于跨应用跟踪你的兴
 		</Item>
 
 		<Item name="禁用 Edge 每日壁纸">
-			<Tags>Edge,NewTab,Wallpaper,Bing,Background,NewTabPageContentEnabled</Tags>
+			<Tags>Edge,NewTab,Wallpaper,Bing,Background,NewTabPageContentEnabled,NewTabPageSetBackgroundDefaultToBing</Tags>
 
 			<StatusChecks>
 				<Check
@@ -2036,9 +2002,9 @@ Windows 会生成一个唯一的 Advertising ID，用于跨应用跟踪你的兴
 # 锁定背景图片。
 
 
-* **禁用每日一图** (`NewTabPageSetBackgroundDefaultToBing`)
+* 禁用每日一图
 
-背景将变为默认的静态图片(或你自定义的图片)，**不再每天自动联网更换**。
+背景将变为默认的静态图片(或你自定义的图片)，不再每天自动联网更换
 
 ---
 {AutoDetails}
@@ -2154,9 +2120,9 @@ Windows 会生成一个唯一的 Advertising ID，用于跨应用跟踪你的兴
 
 尝试通过组策略阻止 Edge 浏览器在使用 Bing 搜索时显示的广告链接。
 
-### ⚠️ 兼容性说明
-此策略主要针对**教育版**和**企业版**环境设计。在个人版 Windows 上可能无法完全屏蔽所有广告，或者需要配合特定的微软账户登录才能生效。
-* **推荐**：作为一种辅助手段开启，但不要完全依赖它来替代专业的广告拦截插件（如 uBlock Origin）。
+### 兼容性说明
+* 此策略主要针对**教育版**和**企业版**环境设计。在个人版 Windows 上可能无法完全屏蔽所有广告，或者需要配合特定的微软账户登录才能生效。
+* 推荐作为一种辅助手段开启，但不要完全依赖它来替代专业的广告拦截插件（如 uBlock Origin）。
 
 ---
 {AutoDetails}
@@ -2192,7 +2158,7 @@ Windows 会生成一个唯一的 Advertising ID，用于跨应用跟踪你的兴
 
 禁止 Edge 在下载 HTTP 文件或无签名文件时弹出“此文件可能不安全”的拦截警告。
 
-* **⚠️ 安全警告**：开启此项后，浏览器将不再主动拦截潜在的恶意软件下载。请确保你具有辨别文件安全性的能力。
+* **警告**：开启此项后，浏览器将不再主动拦截潜在的恶意软件下载。请确保你具有辨别文件安全性的能力。
 
 ---
 {AutoDetails}
@@ -2223,19 +2189,19 @@ Windows 会生成一个唯一的 Advertising ID，用于跨应用跟踪你的兴
 			<Description>
 				<![CDATA[
     **作用**：
-    关闭 Windows 针对 CPU 漏洞 Spectre (幽灵) 和 Meltdown (熔断) 的软件层面安全补丁。
+    关闭 Windows 针对 CPU 漏洞 幽灵 (Spectre) 和 熔断 (Meltdown) 的软件层面安全补丁。
 
-    ### 📅 背景说明
+    ### 背景
     * **无需开启的情况**：
     18年以后发布, 第 9 代及以后 (如 i9-9900K)、Whiskey Lake 架构 (如 i5-8265U) 的 CPU 硬件层面已经修复了漏洞。  
-	并且新版本WIN10/WIN11已经默认集成此补丁
+	并且WIN10/WIN11已经默认集成此补丁
 
     * **推荐开启的情况**：
     8 代以前的老 CPU (如 i7-8700K, i5-8250U, m3-8100Y 等)。微软的补丁会导致这些 CPU 的随机读写性能下降 **5%~30%**。
 
-    ### ⚖️ 权衡利弊
+    ### 分析
     * 关闭补丁后，系统响应速度会肉眼可见地变快，流畅度提升非常明显 (特别是 Surface 等孱弱设备)。
-    * **极大降低安全性**。浏览不明网页极易被利用该漏洞的恶意代码攻击，可能导致密码泄露。
+    * 但是极大降低安全性, 浏览不明网页极易被利用该漏洞的恶意代码攻击，可能导致密码泄露。
 
     > **警告**：如果此电脑用于**公司内网办公、炒股、存储私钥**等隐私性强的工作，**强烈不建议关闭此补丁**！
 
@@ -2254,48 +2220,7 @@ Windows 会生成一个唯一的 Advertising ID，用于跨应用跟踪你的兴
 			</Restore>
 		</Item>
 
-		<Item name="Disabled ASLR">
-			<Tags>MitigationOptions,ASLR,乱序内存,安全,漏洞防护</Tags>
-
-			<StatusChecks>
-				<Check
-					Key="HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Session Manager\kernel"
-					Value="MitigationOptions"
-					Data="22,22,22,00,00,02,00,00,00,02,00,00,00,00,00,00" />
-			</StatusChecks>
-
-			<Description>
-				<![CDATA[
-# 关闭 Exploit Protection (禁用 ASLR)
-
-**警告：极度危险！** 此选项将修改 `MitigationOptions` 以关闭 ASLR（地址空间布局随机化）。
-
-### 为什么不应该使用？
-* **安全风险**：内存地址固定化，相当于把“大门钥匙挂在门把手上”。黑客可以轻松预测关键组件地址进行缓冲区溢出攻击。
-* **性能迷思**：现代 CPU 拥有 MMU 硬件加速，开启 ASLR 的性能损耗几乎为 0。
-
-> **适用场景**：仅限完全断网环境下，运行 2000 年以前依赖固定内存地址的**工业老软件**。
-
----
-{AutoDetails}
-        ]]>
-			</Description>
-
-			<Optimize>
-				<RegWrite
-					Key="HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Session Manager\kernel"
-					Value="MitigationOptions"
-					Type="REG_BINARY"
-					Data="22,22,22,00,00,02,00,00,00,02,00,00,00,00,00,00"/>
-			</Optimize>
-
-			<Restore>
-				<RegDelete
-					Key="HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Session Manager\kernel"
-					Value="MitigationOptions"/>
-			</Restore>
-		</Item>
-
+		
 		<Item name="Enabled TSX">
 			<Tags>DisableTsx,TSX,TAA,漏洞,Intel,ZombieLoad,侧信道</Tags>
 

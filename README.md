@@ -4,7 +4,7 @@
 何为现代化? 
 摒除Windows的向前兼容, 发挥现代硬件的真实实力
 
-本应用设计逻辑也参考了开源项目[ZyperWin++4.1](https://github.com/ZyperWave/ZyperWinOptimize)
+本应用设计逻辑也参考了开源项目[ZyperWin++4.1](https://github.com/ZyperWave/ZyperWinOptimize)\
 区别在于符合Windows 11 的fluent UI风格, 好看反正
 然后也告诉你为什么要优化这项
 
@@ -42,6 +42,8 @@ Surface孱弱的性能你们知道的, 但是Windows又是个实实在在的💩
 底层的东西还是人为看一眼来的放心
 
 Surface例外(因为我自己有,顺便就做了)
+
+![Pic](1.png)
 
 
 

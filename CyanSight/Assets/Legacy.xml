@@ -1,21 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <CyanSight>
-	<Configuration category="Memory">
-		<Item name="Demo">
-			<Tags>1,2,3,demo,cyanrel</Tags>
-			<Description>
-				<![CDATA[
-           # ⚠️ 不推荐操作
-           ... 解释为什么这是负优化 ...  
-		   demo  
-		   demo  
-		   demo  
-		   ---
-    {AutoDetails}
-           ]]>
-			</Description>
-		</Item>
-	</Configuration>
 	<Configuration category="System">
 
 		<Item name="提高前台程序的显示速度">
@@ -256,7 +240,7 @@ Windows 有一种机制叫“焦点窃取保护”。当你在打字时，如果
 # 🧠 启用 LargeSystemCache
 
 启用"大型系统缓存"
-
+* 微软官方文档已经明确注明已弃用, 不会有任何效果
 * 0 禁用
 * 1 启用
 
@@ -290,7 +274,50 @@ Windows 有一种机制叫“焦点窃取保护”。当你在打字时，如果
 					Data="1"/>
 			</Restore>
 		</Item>
+
+		<Item name="Disabled ASLR">
+			<Tags>MitigationOptions,ASLR,乱序内存,安全,漏洞防护</Tags>
+
+			<StatusChecks>
+				<Check
+					Key="HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Session Manager\kernel"
+					Value="MitigationOptions"
+					Data="22,22,22,00,00,02,00,00,00,02,00,00,00,00,00,00" />
+			</StatusChecks>
+
+			<Description>
+				<![CDATA[
+# 关闭乱序内存 / 关闭 Exploit Protection / 禁用 ASLR
+
+**警告：极度危险！** 此选项将修改 `MitigationOptions` 以关闭 ASLR（地址空间布局随机化）。
+
+### 为什么不应该使用？
+* **安全风险**：内存地址固定化，相当于把“大门钥匙挂在门把手上”。黑客可以轻松预测关键组件地址进行缓冲区溢出攻击。
+* **性能迷思**：现代 CPU 拥有 MMU 硬件加速，开启 ASLR 的性能损耗几乎为 0。
+
+> **适用场景**：仅限完全断网环境下，运行 2000 年以前依赖固定内存地址的**工业老软件**。
+
+---
+{AutoDetails}
+        ]]>
+			</Description>
+
+			<Optimize>
+				<RegWrite
+					Key="HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Session Manager\kernel"
+					Value="MitigationOptions"
+					Type="REG_BINARY"
+					Data="22,22,22,00,00,02,00,00,00,02,00,00,00,00,00,00"/>
+			</Optimize>
+
+			<Restore>
+				<RegDelete
+					Key="HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Session Manager\kernel"
+					Value="MitigationOptions"/>
+			</Restore>
+		</Item>
+
 		
-		</Configuration>
+	</Configuration>
 </CyanSight>
 
